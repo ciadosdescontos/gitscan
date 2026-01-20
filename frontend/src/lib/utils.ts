@@ -48,3 +48,29 @@ export function getSeverityBgColor(severity: string): string {
   };
   return colors[severity] || colors.INFO;
 }
+
+export function getCategoryLabel(category: string): string {
+  const labels: Record<string, string> = {
+    XSS: 'XSS',
+    SQL_INJECTION: 'SQL Injection',
+    COMMAND_INJECTION: 'Command Injection',
+    PATH_TRAVERSAL: 'Path Traversal',
+    SSRF: 'SSRF',
+    XXE: 'XXE',
+    DESERIALIZATION: 'Desserialização',
+    AUTHENTICATION: 'Autenticação',
+    AUTHORIZATION: 'Autorização',
+    CRYPTOGRAPHY: 'Criptografia',
+    SECRETS_EXPOSURE: 'Exposição de Secrets',
+    DEPENDENCY: 'Dependência',
+    CONFIGURATION: 'Configuração',
+    CODE_QUALITY: 'Qualidade de Código',
+    CSRF: 'CSRF',
+    SESSION: 'Sessão',
+    IDOR: 'IDOR',
+    MASS_ASSIGNMENT: 'Mass Assignment',
+    OPEN_REDIRECT: 'Open Redirect',
+    OTHER: 'Outro',
+  };
+  return labels[category] || category;
+}
