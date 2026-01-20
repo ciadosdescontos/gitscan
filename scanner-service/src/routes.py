@@ -59,7 +59,8 @@ def start_scan():
             access_token=data['repository'].get('access_token'),
             scan_type=data.get('options', {}).get('scan_type', 'FULL'),
             file_patterns=data.get('options', {}).get('file_patterns'),
-            exclude_patterns=data.get('options', {}).get('exclude_patterns')
+            exclude_patterns=data.get('options', {}).get('exclude_patterns'),
+            scanners=data.get('options', {}).get('scanners')
         )
 
         logger.info('Starting scan', scan_id=scan_request.scan_id)

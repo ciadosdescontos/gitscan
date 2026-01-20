@@ -69,25 +69,81 @@ class SecurityScanner:
         self._init_scanners()
 
     def _init_scanners(self):
-        """Initialize all security scanners"""
-        # File-level scanners (run on each file)
-        self.scanners = [
-            XSSScanner(),
-            InjectionScanner(),
-            SecretsScanner(),
-            CSRFScanner(),
-            SessionScanner(),
-            IDORScanner(),
-            MisconfigScanner(),
-        ]
+        """Initialize all security scanners based on scan type and selected scanners"""
+        # Map of scanner categories to scanners
+        scanner_map = {
+            'XSS': XSSScanner(),
+            'SQL_INJECTION': InjectionScanner(),
+            'COMMAND_INJECTION': InjectionScanner(),
+            'SECRETS_EXPOSURE': SecretsScanner(),
+            'CSRF': CSRFScanner(),
+            'SESSION': SessionScanner(),
+            'IDOR': IDORScanner(),
+            'CONFIGURATION': MisconfigScanner(),
+            'AUTHENTICATION': MisconfigScanner(),
+            'AUTHORIZATION': MisconfigScanner(),
+            'CRYPTOGRAPHY': MisconfigScanner(),
+            'OPEN_REDIRECT': MisconfigScanner(),
+            'PATH_TRAVERSAL': InjectionScanner(),
+            'SSRF': InjectionScanner(),
+        }
 
-        # Directory-level scanners (run once on entire directory)
-        # These use professional tools for accurate detection
-        self.directory_scanners = [
-            SemgrepScanner(),
-            BanditScanner(),
-            DependencyScanner(),
-        ]
+        # Directory-level scanner map
+        directory_scanner_map = {
+            'CODE_QUALITY': [SemgrepScanner(), BanditScanner()],
+            'DEPENDENCY': [DependencyScanner()],
+        }
+
+        # Get selected scanners - for CUSTOM scan type, use the selected scanners list
+        selected = self.request.scanners if self.request.scan_type == 'CUSTOM' and self.request.scanners else None
+
+        if selected:
+            # Custom scan - only use selected scanners
+            used_scanners = set()
+            self.scanners = []
+            for category in selected:
+                if category in scanner_map:
+                    scanner = scanner_map[category]
+                    # Avoid duplicates (e.g., InjectionScanner for multiple categories)
+                    scanner_type = type(scanner).__name__
+                    if scanner_type not in used_scanners:
+                        self.scanners.append(scanner)
+                        used_scanners.add(scanner_type)
+
+            # Directory scanners for custom scan
+            self.directory_scanners = []
+            for category in selected:
+                if category in directory_scanner_map:
+                    for scanner in directory_scanner_map[category]:
+                        scanner_type = type(scanner).__name__
+                        if scanner_type not in used_scanners:
+                            self.directory_scanners.append(scanner)
+                            used_scanners.add(scanner_type)
+        else:
+            # FULL or QUICK scan - use all scanners
+            self.scanners = [
+                XSSScanner(),
+                InjectionScanner(),
+                SecretsScanner(),
+                CSRFScanner(),
+                SessionScanner(),
+                IDORScanner(),
+                MisconfigScanner(),
+            ]
+
+            # Directory-level scanners (run once on entire directory)
+            self.directory_scanners = [
+                SemgrepScanner(),
+                BanditScanner(),
+                DependencyScanner(),
+            ]
+
+        logger.info(
+            'Scanners initialized',
+            scan_type=self.request.scan_type,
+            file_scanners=[type(s).__name__ for s in self.scanners],
+            directory_scanners=[type(s).__name__ for s in self.directory_scanners]
+        )
 
     def scan(self) -> ScanResult:
         """Execute the security scan"""

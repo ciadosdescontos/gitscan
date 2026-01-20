@@ -14,6 +14,7 @@ const createScanSchema = z.object({
   repositoryId: z.string().uuid(),
   branch: z.string().optional(),
   scanType: z.enum(['FULL', 'QUICK', 'CUSTOM']).optional().default('FULL'),
+  scanners: z.array(z.string()).optional(),
 });
 
 const listScansSchema = z.object({
@@ -88,7 +89,9 @@ export async function createScan(
     repository.fullName,
     branch,
     accessToken,
-    repository.cloneUrl
+    repository.cloneUrl,
+    validated.scanType,
+    validated.scanners
   ).catch((error) => {
     logger.error('Scan failed asynchronously', { scanId: scan.id, error: error.message });
   });

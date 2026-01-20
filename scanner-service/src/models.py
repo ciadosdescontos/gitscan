@@ -51,6 +51,7 @@ class ScanRequest:
     scan_type: str = 'FULL'
     file_patterns: Optional[List[str]] = None
     exclude_patterns: Optional[List[str]] = None
+    scanners: Optional[List[str]] = None  # For CUSTOM scan type - list of scanner categories to use
 
 
 @dataclass

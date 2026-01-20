@@ -63,7 +63,7 @@ export const repositoryApi = {
 };
 
 export const scanApi = {
-  createScan: (data: { repositoryId: string; branch?: string; scanType?: string }) =>
+  createScan: (data: { repositoryId: string; branch?: string; scanType?: string; scanners?: string[] }) =>
     api.post('/scans', data),
   listScans: (params?: { page?: number; limit?: number; status?: string; repositoryId?: string }) =>
     api.get('/scans', { params }),

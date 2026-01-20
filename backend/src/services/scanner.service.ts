@@ -99,7 +99,9 @@ export async function startScan(
   repositoryFullName: string,
   branch: string,
   accessToken: string,
-  cloneUrl: string
+  cloneUrl: string,
+  scanType: string = 'FULL',
+  scanners?: string[]
 ): Promise<void> {
   const scannerClient = axios.create({
     baseURL: SCANNER_URL,
@@ -151,7 +153,8 @@ export async function startScan(
         access_token: accessToken,
       },
       options: {
-        scan_type: 'FULL',
+        scan_type: scanType,
+        ...(scanners && scanners.length > 0 && { scanners }),
       },
     });
 
