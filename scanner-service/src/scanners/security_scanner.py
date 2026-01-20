@@ -22,6 +22,10 @@ from .secrets_scanner import SecretsScanner
 from .semgrep_scanner import SemgrepScanner
 from .bandit_scanner import BanditScanner
 from .dependency_scanner import DependencyScanner
+from .csrf_scanner import CSRFScanner
+from .session_scanner import SessionScanner
+from .idor_scanner import IDORScanner
+from .misconfig_scanner import MisconfigScanner
 from .base_scanner import BaseScanner
 
 logger = structlog.get_logger()
@@ -71,6 +75,10 @@ class SecurityScanner:
             XSSScanner(),
             InjectionScanner(),
             SecretsScanner(),
+            CSRFScanner(),
+            SessionScanner(),
+            IDORScanner(),
+            MisconfigScanner(),
         ]
 
         # Directory-level scanners (run once on entire directory)
