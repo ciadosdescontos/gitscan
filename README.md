@@ -273,10 +273,21 @@ Checks package manifests against vulnerability databases (Safety DB, npm audit).
 | SQL_INJECTION | SQL Injection attacks |
 | COMMAND_INJECTION | OS Command Injection |
 | PATH_TRAVERSAL | Directory Traversal |
-| SECRETS_EXPOSURE | Exposed credentials |
-| INSECURE_DESERIALIZATION | Unsafe deserialization |
-| VULNERABLE_DEPENDENCY | Known vulnerable packages |
-| SECURITY_MISCONFIGURATION | Configuration issues |
+| SSRF | Server-Side Request Forgery |
+| XXE | XML External Entity |
+| DESERIALIZATION | Insecure Deserialization |
+| AUTHENTICATION | Authentication weaknesses |
+| AUTHORIZATION | Authorization/access control issues |
+| CRYPTOGRAPHY | Weak cryptographic implementations |
+| SECRETS_EXPOSURE | Exposed credentials and API keys |
+| DEPENDENCY | Known vulnerable packages |
+| CONFIGURATION | Security misconfiguration |
+| CODE_QUALITY | Code quality issues with security impact |
+| CSRF | Cross-Site Request Forgery |
+| SESSION | Session management issues |
+| IDOR | Insecure Direct Object Reference |
+| MASS_ASSIGNMENT | Mass assignment vulnerabilities |
+| OPEN_REDIRECT | Open redirect vulnerabilities |
 
 ## Environment Variables
 
@@ -315,6 +326,21 @@ docker-compose down
 docker-compose down -v
 docker-compose up -d
 ```
+
+## Recent Updates
+
+### v1.1.0 (January 2026)
+- **Bug Fix**: Fixed GitHub token decryption issue in Apply Fix feature
+- **New Scanners**: Added support for CSRF, Session, IDOR, Mass Assignment, and Open Redirect vulnerability detection
+- **Improved Error Handling**: Better error messages for GitHub authentication failures
+- **UI Improvements**: Enhanced vulnerability detail page with proper fix application feedback
+
+### v1.0.0 (Initial Release)
+- Multi-scanner architecture with Semgrep, Bandit, and custom regex scanners
+- AI-powered fix generation with OpenAI, Anthropic, and Google support
+- Automatic Pull Request creation for security fixes
+- Real-time scan progress monitoring
+- GitHub OAuth integration
 
 ## Contributing
 

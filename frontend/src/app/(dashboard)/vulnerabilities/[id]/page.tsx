@@ -70,12 +70,28 @@ export default function VulnerabilityDetailPage() {
   // Apply fix mutation
   const applyFixMutation = useMutation({
     mutationFn: (fixId: string) => vulnerabilityApi.applyFix(vulnId, fixId),
-    onSuccess: () => {
-      toast.success('Criando Pull Request...');
+    onSuccess: (response) => {
+      const data = response.data.data;
+      if (data?.pullRequest?.url) {
+        toast.success(`Pull Request #${data.pullRequest.number} criado com sucesso!`);
+      } else {
+        toast.success('Fix aplicado com sucesso!');
+      }
       queryClient.invalidateQueries({ queryKey: ['vulnerability', vulnId] });
     },
-    onError: () => {
-      toast.error('Erro ao aplicar fix');
+    onError: (error: any) => {
+      const status = error.response?.status;
+      const message = error.response?.data?.error?.message;
+
+      if (status === 401) {
+        toast.error('Token do GitHub expirado. Por favor, faça login novamente.');
+        // Redirect to login after a short delay
+        setTimeout(() => {
+          router.push('/login');
+        }, 2000);
+      } else {
+        toast.error(message || 'Erro ao aplicar fix');
+      }
     },
   });
 
