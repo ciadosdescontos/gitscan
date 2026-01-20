@@ -1,0 +1,26 @@
+# Development Dockerfile for GitScan Backend
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies for native modules and OpenSSL for Prisma
+RUN apk add --no-cache python3 make g++ openssl openssl-dev
+
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Install dependencies
+RUN npm install
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Copy source code (will be overwritten by volume in dev)
+COPY . .
+
+# Expose port
+EXPOSE 3001
+
+# Start development server
+CMD ["npm", "run", "dev"]

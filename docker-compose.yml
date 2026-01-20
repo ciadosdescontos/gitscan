@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: gitscan-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gitscan
+      POSTGRES_PASSWORD: gitscan_password
+      POSTGRES_DB: gitscan_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gitscan -d gitscan_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for job queues and caching
+  redis:
+    image: redis:7-alpine
+    container_name: gitscan-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API (development)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: gitscan-backend
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      DATABASE_URL: postgresql://gitscan:gitscan_password@postgres:5432/gitscan_db?schema=public
+      REDIS_URL: redis://redis:6379
+      FRONTEND_URL: http://localhost:8080
+      JWT_SECRET: gitscan-super-secret-jwt-key-2024
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      GITHUB_CALLBACK_URL: http://localhost:3002/api/v1/auth/github/callback
+      SCANNER_SERVICE_URL: http://scanner:5000
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: npm run dev
+
+  # Scanner Service (Python)
+  scanner:
+    build:
+      context: ./scanner-service
+      dockerfile: Dockerfile.dev
+    container_name: gitscan-scanner
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      FLASK_ENV: development
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - ./scanner-service:/app
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # Frontend (development)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: gitscan-frontend
+    restart: unless-stopped
+    ports:
+      - "8080:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3002/api/v1
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: gitscan-network

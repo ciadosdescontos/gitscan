@@ -1,0 +1,301 @@
+// Prisma Schema for GitScan
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model - stores GitHub authenticated users
+model User {
+  id              String    @id @default(uuid())
+  githubId        String    @unique
+  username        String    @unique
+  email           String?
+  avatarUrl       String?
+  accessToken     String    // Encrypted GitHub access token
+  refreshToken    String?   // Encrypted refresh token
+
+  // User preferences
+  defaultLlmProvider LlmProvider @default(OPENAI)
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  lastLoginAt     DateTime  @default(now())
+
+  // Relations
+  repositories    Repository[]
+  scans           Scan[]
+  apiKeys         UserApiKey[]
+
+  @@map("users")
+}
+
+// User's LLM API Keys
+model UserApiKey {
+  id          String      @id @default(uuid())
+  userId      String
+  provider    LlmProvider
+  apiKey      String      // Encrypted
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@map("user_api_keys")
+}
+
+// Repository model - GitHub repositories selected for scanning
+model Repository {
+  id              String    @id @default(uuid())
+  userId          String
+  githubRepoId    String
+  name            String
+  fullName        String    // owner/repo format
+  description     String?
+  defaultBranch   String    @default("main")
+  language        String?
+  isPrivate       Boolean   @default(false)
+  htmlUrl         String
+  cloneUrl        String
+
+  // Scanning configuration
+  autoScanEnabled Boolean   @default(false)
+  scanOnPush      Boolean   @default(false)
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  lastScannedAt   DateTime?
+
+  // Relations
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scans           Scan[]
+
+  @@unique([userId, githubRepoId])
+  @@map("repositories")
+}
+
+// Scan model - represents a security scan execution
+model Scan {
+  id              String      @id @default(uuid())
+  userId          String
+  repositoryId    String
+
+  // Scan configuration
+  branch          String
+  commitHash      String?
+  scanType        ScanType    @default(FULL)
+
+  // Status tracking
+  status          ScanStatus  @default(PENDING)
+  progress        Int         @default(0) // 0-100
+
+  // Results summary
+  totalFiles      Int         @default(0)
+  filesScanned    Int         @default(0)
+
+  // Vulnerability counts by severity
+  criticalCount   Int         @default(0)
+  highCount       Int         @default(0)
+  mediumCount     Int         @default(0)
+  lowCount        Int         @default(0)
+  infoCount       Int         @default(0)
+
+  // Timing
+  startedAt       DateTime?
+  completedAt     DateTime?
+
+  // Error handling
+  errorMessage    String?
+
+  // Timestamps
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relations
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  repository      Repository  @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  vulnerabilities Vulnerability[]
+  reports         Report[]
+
+  @@map("scans")
+}
+
+// Vulnerability model - individual security issues found
+model Vulnerability {
+  id              String            @id @default(uuid())
+  scanId          String
+
+  // Vulnerability details
+  title           String
+  description     String
+  severity        Severity
+  category        VulnerabilityCategory
+
+  // Location in code
+  filePath        String
+  startLine       Int
+  endLine         Int
+  codeSnippet     String?           @db.Text
+
+  // CWE/CVE references
+  cweId           String?           // e.g., CWE-79
+  cveId           String?           // e.g., CVE-2023-1234
+
+  // Fix suggestions
+  suggestedFix    String?           @db.Text
+  fixConfidence   Float?            // 0.0 - 1.0
+  autoFixAvailable Boolean          @default(false)
+
+  // Status tracking
+  status          VulnerabilityStatus @default(OPEN)
+  falsePositive   Boolean           @default(false)
+
+  // Timestamps
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Relations
+  scan            Scan              @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  fixes           Fix[]
+
+  @@map("vulnerabilities")
+}
+
+// Fix model - automatic fix attempts
+model Fix {
+  id              String      @id @default(uuid())
+  vulnerabilityId String
+
+  // Fix details
+  originalCode    String      @db.Text
+  fixedCode       String      @db.Text
+  explanation     String?     @db.Text
+
+  // LLM provider used
+  llmProvider     LlmProvider
+  llmModel        String?
+
+  // Status
+  status          FixStatus   @default(PENDING)
+  appliedAt       DateTime?
+
+  // Pull Request info
+  prUrl           String?
+  prNumber        Int?
+  prStatus        PrStatus?
+
+  // Timestamps
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relations
+  vulnerability   Vulnerability @relation(fields: [vulnerabilityId], references: [id], onDelete: Cascade)
+
+  @@map("fixes")
+}
+
+// Report model - generated security reports
+model Report {
+  id              String      @id @default(uuid())
+  scanId          String
+
+  // Report details
+  title           String
+  format          ReportFormat @default(JSON)
+  content         String       @db.Text
+
+  // Summary data
+  summary         Json?
+
+  // Timestamps
+  createdAt       DateTime     @default(now())
+
+  // Relations
+  scan            Scan         @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  @@map("reports")
+}
+
+// Enums
+enum LlmProvider {
+  OPENAI
+  ANTHROPIC
+  GOOGLE
+}
+
+enum ScanType {
+  FULL
+  QUICK
+  CUSTOM
+}
+
+enum ScanStatus {
+  PENDING
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum Severity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+  INFO
+}
+
+enum VulnerabilityCategory {
+  XSS
+  SQL_INJECTION
+  COMMAND_INJECTION
+  PATH_TRAVERSAL
+  SSRF
+  XXE
+  DESERIALIZATION
+  AUTHENTICATION
+  AUTHORIZATION
+  CRYPTOGRAPHY
+  SECRETS_EXPOSURE
+  DEPENDENCY
+  CONFIGURATION
+  CODE_QUALITY
+  OTHER
+}
+
+enum VulnerabilityStatus {
+  OPEN
+  IN_PROGRESS
+  FIXED
+  WONT_FIX
+  FALSE_POSITIVE
+}
+
+enum FixStatus {
+  PENDING
+  APPLIED
+  FAILED
+  REJECTED
+}
+
+enum PrStatus {
+  OPEN
+  MERGED
+  CLOSED
+}
+
+enum ReportFormat {
+  JSON
+  HTML
+  PDF
+  MARKDOWN
+}
