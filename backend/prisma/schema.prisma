@@ -22,6 +22,19 @@ model User {
   // User preferences
   defaultLlmProvider LlmProvider @default(OPENAI)
 
+  // Stripe/Subscription fields
+  stripeCustomerId    String?   @unique
+  subscriptionId      String?   @unique
+  subscriptionStatus  SubscriptionStatus @default(FREE)
+  plan                PlanType  @default(FREE)
+  planExpiresAt       DateTime?
+
+  // Usage tracking (monthly reset)
+  scansUsedThisMonth  Int       @default(0)
+  reposUsedThisMonth  Int       @default(0)
+  fixesUsedThisMonth  Int       @default(0)
+  usageResetAt        DateTime  @default(now())
+
   // Timestamps
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -31,6 +44,7 @@ model User {
   repositories    Repository[]
   scans           Scan[]
   apiKeys         UserApiKey[]
+  invoices        Invoice[]
 
   @@map("users")
 }
@@ -304,3 +318,61 @@ enum ReportFormat {
   PDF
   MARKDOWN
 }
+
+// Subscription & Billing Enums
+enum PlanType {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  FREE
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  TRIALING
+}
+
+// Invoice model - tracks payment history
+model Invoice {
+  id              String        @id @default(uuid())
+  userId          String
+  stripeInvoiceId String        @unique
+
+  // Invoice details
+  amount          Int           // Amount in cents
+  currency        String        @default("brl")
+  status          InvoiceStatus
+  description     String?
+
+  // Period
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  // URLs
+  invoicePdf      String?
+  hostedInvoiceUrl String?
+
+  // Timestamps
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+
+  // Relations
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("invoices")
+}
+
+enum InvoiceStatus {
+  DRAFT
+  OPEN
+  PAID
+  VOID
+  UNCOLLECTIBLE
+}
+
+// Plan limits configuration (stored as reference)
+// FREE: 3 repos, 10 scans/month, 5 AI fixes/month
+// PRO: 20 repos, 100 scans/month, 50 AI fixes/month
+// ENTERPRISE: Unlimited repos, Unlimited scans, Unlimited AI fixes

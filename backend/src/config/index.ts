@@ -51,6 +51,18 @@ export const config = {
   // Redis
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
 
+  // Stripe
+  stripe: {
+    secretKey: process.env.STRIPE_SECRET_KEY || '',
+    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '',
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
+    prices: {
+      free: 'price_free',
+      pro: process.env.STRIPE_PRICE_PRO || '',
+      enterprise: process.env.STRIPE_PRICE_ENTERPRISE || '',
+    },
+  },
+
   // Logging
   logLevel: process.env.LOG_LEVEL || 'debug',
 

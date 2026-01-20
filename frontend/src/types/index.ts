@@ -6,8 +6,37 @@ export interface User {
   email?: string;
   avatarUrl?: string;
   defaultLlmProvider: LlmProvider;
+  plan: PlanType;
+  subscriptionStatus: SubscriptionStatus;
   createdAt: string;
   lastLoginAt: string;
+}
+
+// Subscription types
+export type PlanType = 'FREE' | 'PRO' | 'ENTERPRISE';
+export type SubscriptionStatus = 'FREE' | 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | 'TRIALING';
+
+export interface SubscriptionInfo {
+  plan: PlanType;
+  status: SubscriptionStatus;
+  expiresAt?: string;
+  usage: {
+    scans: UsageInfo;
+    repositories: UsageInfo;
+    fixes: UsageInfo;
+  };
+  features: {
+    prioritySupport: boolean;
+    customScanners: boolean;
+    apiAccess: boolean;
+  };
+  usageResetAt: string;
+}
+
+export interface UsageInfo {
+  used: number;
+  limit: number;
+  unlimited: boolean;
 }
 
 // Repository types

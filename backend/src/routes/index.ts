@@ -5,6 +5,7 @@ import scanRoutes from './scan.routes.js';
 import vulnerabilityRoutes from './vulnerability.routes.js';
 import apikeyRoutes from './apikey.routes.js';
 import llmRoutes from './llm.routes.js';
+import subscriptionRoutes from './subscription.routes.js';
 import { checkDatabaseHealth } from '../config/database.js';
 
 const router = Router();
@@ -29,5 +30,6 @@ router.use('/scans', scanRoutes);
 router.use('/vulnerabilities', vulnerabilityRoutes);
 router.use('/api-keys', apikeyRoutes);
 router.use('/llm', llmRoutes);
+router.use('/subscription', subscriptionRoutes);
 
 export default router;

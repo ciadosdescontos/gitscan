@@ -102,3 +102,12 @@ export const llmApi = {
   getModels: () => api.get('/llm/models'),
   getProviderModels: (provider: string) => api.get(`/llm/models/${provider}`),
 };
+
+export const subscriptionApi = {
+  getInfo: () => api.get('/subscription/info'),
+  getPlans: () => api.get('/subscription/plans'),
+  getStripeKey: () => api.get('/subscription/stripe-key'),
+  createCheckout: (plan: string) => api.post('/subscription/checkout', { plan }),
+  createPortal: () => api.post('/subscription/portal'),
+  checkLimits: (action: string) => api.get(`/subscription/limits/${action}`),
+};

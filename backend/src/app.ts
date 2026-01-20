@@ -10,6 +10,7 @@ import { connectDatabase, disconnectDatabase } from './config/database.js';
 import { logger } from './utils/logger.js';
 import { errorHandler, notFoundHandler } from './middlewares/error.middleware.js';
 import routes from './routes/index.js';
+import webhookRoutes from './routes/webhook.routes.js';
 
 // Create Express app
 const app: Express = express();
@@ -29,6 +30,9 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
+
+// Webhook routes (before body parsing - needs raw body)
+app.use('/webhooks', webhookRoutes);
 
 // Rate limiting
 const limiter = rateLimit({
