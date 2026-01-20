@@ -81,6 +81,12 @@ export default function SettingsPage() {
   const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [notificationPrefs, setNotificationPrefs] = useState({
+    scanCompleted: true,
+    criticalVulnerability: true,
+    fixGenerated: true,
+    prCreated: true,
+  });
 
   // Fetch configured API keys from backend (only when authenticated)
   const { data: apiKeysData, refetch: refetchApiKeys } = useQuery({
@@ -112,7 +118,7 @@ export default function SettingsPage() {
     }
   }, [apiKeysData]);
 
-  // Load saved models from localStorage on mount
+  // Load saved models and notification preferences from localStorage on mount
   useEffect(() => {
     const savedModels = localStorage.getItem('gitscan_selected_models');
     if (savedModels) {
@@ -125,6 +131,14 @@ export default function SettingsPage() {
     const savedProvider = localStorage.getItem('gitscan_default_provider');
     if (savedProvider && ['OPENAI', 'ANTHROPIC', 'GOOGLE'].includes(savedProvider)) {
       setSelectedProvider(savedProvider as LlmProvider);
+    }
+    const savedNotifications = localStorage.getItem('gitscan_notification_prefs');
+    if (savedNotifications) {
+      try {
+        setNotificationPrefs(JSON.parse(savedNotifications));
+      } catch (e) {
+        // Invalid JSON, ignore
+      }
     }
   }, []);
 
@@ -570,24 +584,28 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               {[
                 {
+                  key: 'scanCompleted',
                   title: 'Scan Concluído',
                   description: 'Receber notificação quando um scan terminar',
                 },
                 {
+                  key: 'criticalVulnerability',
                   title: 'Vulnerabilidade Crítica',
                   description: 'Alerta imediato para vulnerabilidades críticas encontradas',
                 },
                 {
+                  key: 'fixGenerated',
                   title: 'Fix Gerado',
                   description: 'Notificar quando um fix for gerado pela IA',
                 },
                 {
+                  key: 'prCreated',
                   title: 'Pull Request Criado',
                   description: 'Notificar quando um PR for criado automaticamente',
                 },
-              ].map((item, index) => (
+              ].map((item) => (
                 <div
-                  key={index}
+                  key={item.key}
                   className="flex items-center justify-between rounded-lg border p-4"
                 >
                   <div>
@@ -599,13 +617,28 @@ export default function SettingsPage() {
                   <label className="relative inline-flex cursor-pointer items-center">
                     <input
                       type="checkbox"
-                      defaultChecked
+                      checked={notificationPrefs[item.key as keyof typeof notificationPrefs]}
+                      onChange={(e) => {
+                        const newPrefs = {
+                          ...notificationPrefs,
+                          [item.key]: e.target.checked,
+                        };
+                        setNotificationPrefs(newPrefs);
+                        localStorage.setItem('gitscan_notification_prefs', JSON.stringify(newPrefs));
+                        toast.success(`Notificação "${item.title}" ${e.target.checked ? 'ativada' : 'desativada'}`);
+                      }}
                       className="peer sr-only"
                     />
                     <div className="h-6 w-11 rounded-full bg-muted peer-checked:bg-primary peer-focus:ring-2 peer-focus:ring-ring after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:bg-white after:transition-all peer-checked:after:translate-x-full" />
                   </label>
                 </div>
               ))}
+
+              <div className="pt-4 border-t">
+                <p className="text-sm text-muted-foreground">
+                  As notificações aparecem como toast na interface. Em breve: notificações por email e webhook.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </Tabs.Content>
