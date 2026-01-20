@@ -541,6 +541,8 @@ export default function ScanDetailPage() {
                         className={`flex w-full items-start gap-3 rounded-lg border p-3 text-left transition-colors ${
                           selectedVuln?.id === vuln.id
                             ? 'border-primary bg-primary/5'
+                            : vuln.status === 'FIXED' || vuln.status === 'IN_PROGRESS'
+                            ? 'border-green-500/30 bg-green-500/5 hover:bg-green-500/10'
                             : 'hover:bg-muted/50'
                         }`}
                       >
@@ -551,7 +553,21 @@ export default function ScanDetailPage() {
                           {vuln.severity}
                         </Badge>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{vuln.title}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium truncate">{vuln.title}</p>
+                            {vuln.status === 'IN_PROGRESS' && (
+                              <Badge variant="warning" className="text-xs">
+                                <GitPullRequest className="mr-1 h-3 w-3" />
+                                PR
+                              </Badge>
+                            )}
+                            {vuln.status === 'FIXED' && (
+                              <Badge variant="success" className="text-xs">
+                                <CheckCircle className="mr-1 h-3 w-3" />
+                                Corrigido
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-xs text-muted-foreground truncate">
                             {vuln.filePath}:{vuln.startLine}
                           </p>
