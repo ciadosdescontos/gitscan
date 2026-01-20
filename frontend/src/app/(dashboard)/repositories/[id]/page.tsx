@@ -35,27 +35,21 @@ export default function RepositoryDetailPage() {
   const [autoScanEnabled, setAutoScanEnabled] = useState(false);
   const [scanOnPush, setScanOnPush] = useState(false);
 
-  // Fetch repository details
+  // Fetch repository details (includes last 5 scans from backend)
   const { data: repository, isLoading: loadingRepo } = useQuery({
     queryKey: ['repository', repoId],
     queryFn: async () => {
       const response = await repositoryApi.getRepo(repoId);
-      const repo = response.data.data as Repository;
+      const repo = response.data.data;
       setAutoScanEnabled(repo.autoScanEnabled);
       setScanOnPush(repo.scanOnPush);
       return repo;
     },
   });
 
-  // Fetch repository scans
-  const { data: scansData, isLoading: loadingScans } = useQuery({
-    queryKey: ['repository-scans', repoId],
-    queryFn: async () => {
-      const response = await scanApi.listScans({ repositoryId: repoId, limit: 10 });
-      return response.data.data as ScanType[];
-    },
-    enabled: !!repository,
-  });
+  // Use scans from repository response (backend includes last 5 scans)
+  const scansData = repository?.scans as ScanType[] | undefined;
+  const loadingScans = loadingRepo;
 
   // Update repository settings
   const updateMutation = useMutation({
