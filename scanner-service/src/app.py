@@ -53,4 +53,9 @@ def create_app(config_class=Config):
 app = create_app()
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    import os
+    # Only for local development - Docker uses 'flask run' command
+    debug_mode = os.environ.get('FLASK_ENV', 'development') == 'development'
+    port = int(os.environ.get('PORT', 5000))
+    # host='0.0.0.0' is required for Docker container networking
+    app.run(debug=debug_mode, host='0.0.0.0', port=port)
