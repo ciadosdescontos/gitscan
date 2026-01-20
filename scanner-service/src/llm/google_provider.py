@@ -1,5 +1,6 @@
 """
 Google (Gemini) LLM Provider
+Supports Gemini 2.5, 2.0, and 1.5 models
 """
 
 import json
@@ -9,6 +10,7 @@ from typing import Optional
 import google.generativeai as genai
 
 from .base import BaseLLMProvider, FixRequest, FixResponse
+from .models_config import get_default_model, GOOGLE_MODELS
 
 logger = structlog.get_logger()
 
@@ -26,7 +28,11 @@ class GoogleProvider(BaseLLMProvider):
 
     @property
     def default_model(self) -> str:
-        return "gemini-2.0-flash"
+        return get_default_model("GOOGLE")
+
+    @property
+    def available_models(self) -> list:
+        return GOOGLE_MODELS
 
     async def generate_fix(
         self,
@@ -34,7 +40,6 @@ class GoogleProvider(BaseLLMProvider):
         model: Optional[str] = None
     ) -> FixResponse:
         """Generate a security fix using Google's Gemini API"""
-        # Gemini doesn't have native async, so we use sync version
         return self._generate_fix_sync(request, model)
 
     def _generate_fix_sync(
@@ -53,12 +58,15 @@ class GoogleProvider(BaseLLMProvider):
         )
 
         try:
+            # Configure generation settings based on model
+            generation_config = genai.GenerationConfig(
+                temperature=0.2,
+                max_output_tokens=4000,
+            )
+
             gemini_model = genai.GenerativeModel(
                 model_name,
-                generation_config=genai.GenerationConfig(
-                    temperature=0.2,
-                    max_output_tokens=2000,
-                )
+                generation_config=generation_config,
             )
 
             # Combine system and user prompts for Gemini
@@ -72,8 +80,10 @@ class GoogleProvider(BaseLLMProvider):
 
             response_text = response.text if response.text else ""
 
-            # Gemini doesn't provide token count directly in the same way
+            # Try to get token count
             tokens_used = 0
+            if hasattr(response, 'usage_metadata'):
+                tokens_used = getattr(response.usage_metadata, 'total_token_count', 0)
 
             fix_response = self._parse_response(response_text, model_name)
             fix_response.tokens_used = tokens_used
@@ -99,7 +109,7 @@ class GoogleProviderSync:
         self.api_key = api_key
         genai.configure(api_key=api_key)
         self.provider_name = "GOOGLE"
-        self.default_model = "gemini-2.0-flash"
+        self.default_model = get_default_model("GOOGLE")
 
     def generate_fix(
         self,
@@ -117,12 +127,15 @@ class GoogleProviderSync:
         )
 
         try:
+            # Configure generation settings
+            generation_config = genai.GenerationConfig(
+                temperature=0.2,
+                max_output_tokens=4000,
+            )
+
             gemini_model = genai.GenerativeModel(
                 model_name,
-                generation_config=genai.GenerationConfig(
-                    temperature=0.2,
-                    max_output_tokens=2000,
-                )
+                generation_config=generation_config,
             )
 
             # Combine system and user prompts for Gemini
@@ -136,8 +149,14 @@ class GoogleProviderSync:
 
             response_text = response.text if response.text else ""
 
+            # Try to get token count
+            tokens_used = 0
+            if hasattr(response, 'usage_metadata'):
+                tokens_used = getattr(response.usage_metadata, 'total_token_count', 0)
+
             # Parse response
             fix_response = self._parse_response(response_text, model_name)
+            fix_response.tokens_used = tokens_used
 
             logger.info(
                 "Fix generated successfully",

@@ -6,6 +6,7 @@ from flask import Blueprint, jsonify, request
 import structlog
 
 from .llm import LLMFactory, get_llm_provider, FixRequest, FixResponse
+from .llm.models_config import get_all_providers, get_provider_models, get_default_model
 
 logger = structlog.get_logger()
 
@@ -14,15 +15,63 @@ llm_bp = Blueprint('llm', __name__)
 
 @llm_bp.route('/providers', methods=['GET'])
 def list_providers():
-    """List available LLM providers"""
+    """List available LLM providers with their models"""
     try:
-        providers = LLMFactory.get_available_providers()
+        providers = get_all_providers()
         return jsonify({
             'success': True,
             'data': providers
         })
     except Exception as e:
         logger.error("Error listing providers", error=str(e))
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@llm_bp.route('/models', methods=['GET'])
+def list_models():
+    """List all available models for all providers"""
+    try:
+        providers = get_all_providers()
+        return jsonify({
+            'success': True,
+            'data': {
+                'providers': providers
+            }
+        })
+    except Exception as e:
+        logger.error("Error listing models", error=str(e))
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@llm_bp.route('/models/<provider>', methods=['GET'])
+def list_provider_models(provider: str):
+    """List available models for a specific provider"""
+    try:
+        models = get_provider_models(provider.upper())
+        default_model = get_default_model(provider.upper())
+
+        if not models:
+            return jsonify({
+                'success': False,
+                'error': f'Unknown provider: {provider}'
+            }), 404
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'provider': provider.upper(),
+                'default_model': default_model,
+                'models': models
+            }
+        })
+    except Exception as e:
+        logger.error("Error listing provider models", provider=provider, error=str(e))
         return jsonify({
             'success': False,
             'error': str(e)
@@ -37,7 +86,7 @@ def generate_fix():
     Expected payload:
     {
         "provider": "OPENAI" | "ANTHROPIC" | "GOOGLE",
-        "model": "gpt-4" (optional),
+        "model": "gpt-4o" (optional),
         "api_key": "user's api key" (optional, uses server config if not provided),
         "vulnerability": {
             "title": "XSS Vulnerability",
@@ -61,6 +110,10 @@ def generate_fix():
         model = data.get('model')
         api_key = data.get('api_key')  # User can provide their own key
         vuln = data.get('vulnerability', {})
+
+        # If no model specified, use default for provider
+        if not model:
+            model = get_default_model(provider)
 
         # Validate required fields
         required_fields = ['title', 'description', 'category', 'file_path', 'code_snippet', 'language']
@@ -122,6 +175,7 @@ def analyze_code():
     Expected payload:
     {
         "provider": "OPENAI" | "ANTHROPIC" | "GOOGLE",
+        "model": "gpt-4o" (optional),
         "code": "...",
         "language": "javascript",
         "context": "..." (optional)
@@ -133,6 +187,7 @@ def analyze_code():
             return jsonify({'error': 'No data provided'}), 400
 
         provider = data.get('provider', 'OPENAI')
+        model = data.get('model') or get_default_model(provider)
         code = data.get('code')
         language = data.get('language', 'javascript')
         context = data.get('context', '')
@@ -176,7 +231,7 @@ Provide your analysis in the following JSON format:
             from openai import OpenAI
             client = OpenAI(api_key=api_key or llm.api_key)
             response = client.chat.completions.create(
-                model="gpt-4-turbo-preview",
+                model=model,
                 messages=[
                     {"role": "system", "content": "You are a security expert analyzing code for vulnerabilities."},
                     {"role": "user", "content": analysis_prompt}
@@ -191,7 +246,7 @@ Provide your analysis in the following JSON format:
             from anthropic import Anthropic
             client = Anthropic(api_key=api_key or llm.api_key)
             response = client.messages.create(
-                model="claude-3-sonnet-20240229",
+                model=model,
                 max_tokens=2000,
                 messages=[{"role": "user", "content": analysis_prompt}]
             )
@@ -204,8 +259,8 @@ Provide your analysis in the following JSON format:
         else:  # GOOGLE
             import google.generativeai as genai
             genai.configure(api_key=api_key or llm.api_key)
-            model = genai.GenerativeModel('gemini-pro')
-            response = model.generate_content(analysis_prompt)
+            gemini_model = genai.GenerativeModel(model)
+            response = gemini_model.generate_content(analysis_prompt)
             import re
             json_match = re.search(r'\{.*\}', response.text, re.DOTALL)
             result = json.loads(json_match.group()) if json_match else {"error": "Could not parse response"}

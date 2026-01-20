@@ -12,25 +12,33 @@ import type { LlmProvider } from '@/types';
 import * as Tabs from '@radix-ui/react-tabs';
 import { apiKeyApi } from '@/lib/api';
 
-// Modelos atualizados (Janeiro 2025)
+// Modelos atualizados (Janeiro 2026)
 const llmModels = {
   OPENAI: [
     { id: 'gpt-4o', name: 'GPT-4o', description: 'Mais capaz, multimodal', tag: 'Recomendado' },
     { id: 'gpt-4o-mini', name: 'GPT-4o Mini', description: 'Rápido e econômico', tag: 'Econômico' },
-    { id: 'o1-preview', name: 'o1 Preview', description: 'Raciocínio avançado', tag: 'Novo' },
-    { id: 'o1-mini', name: 'o1 Mini', description: 'Raciocínio rápido', tag: 'Novo' },
+    { id: 'o3-mini', name: 'o3 Mini', description: 'Raciocínio mais avançado', tag: 'Mais Recente' },
+    { id: 'o1', name: 'o1', description: 'Raciocínio avançado', tag: 'Premium' },
+    { id: 'o1-mini', name: 'o1 Mini', description: 'Raciocínio rápido', tag: '' },
     { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', description: 'Alta performance', tag: '' },
   ],
   ANTHROPIC: [
     { id: 'claude-sonnet-4-5-20250514', name: 'Claude Sonnet 4.5', description: 'Último modelo, mais inteligente', tag: 'Mais Recente' },
+    { id: 'claude-opus-4-5-20250514', name: 'Claude Opus 4.5', description: 'Máxima capacidade', tag: 'Premium' },
     { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', description: 'Equilíbrio ideal', tag: 'Recomendado' },
     { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', description: 'Ultra rápido', tag: 'Econômico' },
-    { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', description: 'Máxima capacidade', tag: 'Premium' },
+    { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', description: 'Alta capacidade', tag: '' },
   ],
   GOOGLE: [
-    { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', description: 'Última geração, multimodal', tag: 'Mais Recente' },
-    { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', description: 'Contexto de 1M tokens', tag: 'Recomendado' },
-    { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', description: 'Rápido e eficiente', tag: 'Econômico' },
+    // Gemini 3 Series (Latest)
+    { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro', description: 'Mais inteligente, raciocínio avançado e agentes', tag: 'Mais Recente' },
+    { id: 'gemini-3-flash', name: 'Gemini 3 Flash', description: 'Inteligência Pro na velocidade Flash', tag: 'Recomendado' },
+    // Gemini 2.5 Series (Production)
+    { id: 'gemini-2.5-pro-preview-05-06', name: 'Gemini 2.5 Pro', description: 'Produção, raciocínio aprimorado', tag: '' },
+    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', description: 'Estável para produção', tag: '' },
+    // Gemini 2.0 Series
+    { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', description: 'Multimodal (retirando Mar/2026)', tag: 'Econômico' },
+    { id: 'gemini-2.0-flash-lite', name: 'Gemini 2.0 Flash Lite', description: 'Leve e rápido', tag: '' },
   ],
 };
 
@@ -52,7 +60,7 @@ const llmProviders: { value: LlmProvider; name: string; description: string; ico
   {
     value: 'GOOGLE',
     name: 'Google AI',
-    description: 'Gemini 2.0 e modelos Gemini',
+    description: 'Gemini 3 Pro, 3 Flash e família Gemini',
     icon: <Zap className="h-5 w-5" />,
     color: 'from-blue-500 to-indigo-600',
   },
@@ -66,7 +74,7 @@ export default function SettingsPage() {
   const [selectedModels, setSelectedModels] = useState<Record<string, string>>({
     OPENAI: 'gpt-4o',
     ANTHROPIC: 'claude-sonnet-4-5-20250514',
-    GOOGLE: 'gemini-2.0-flash',
+    GOOGLE: 'gemini-3-flash',
   });
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({
     OPENAI: '',

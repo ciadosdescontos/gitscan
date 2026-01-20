@@ -5,103 +5,154 @@
 </p>
 
 <p align="center">
-  <strong>Automated security vulnerability scanner with AI-powered fix generation</strong>
+  <strong>Scanner automatizado de vulnerabilidades de seguranca com geracao de correcoes por IA</strong>
 </p>
 
 <p align="center">
   <a href="#features">Features</a> •
-  <a href="#architecture">Architecture</a> •
-  <a href="#installation">Installation</a> •
-  <a href="#usage">Usage</a> •
-  <a href="#api">API</a>
+  <a href="#architecture">Arquitetura</a> •
+  <a href="#installation">Instalacao</a> •
+  <a href="#usage">Uso</a> •
+  <a href="#api">API</a> •
+  <a href="#license">Licenca</a>
 </p>
 
 ---
 
-## Overview
+> **AVISO IMPORTANTE**: Este software e propriedade exclusiva da **Pressa Digital** (CNPJ: 63.971.377/0001-08). A comercializacao, venda ou distribuicao comercial por terceiros e expressamente proibida. Consulte a [LICENCA](#licenca-e-direitos-autorais) para mais detalhes.
 
-GitScan is a full-stack application that scans GitHub repositories for security vulnerabilities and provides AI-generated fixes. It integrates multiple professional security tools (Semgrep, Bandit) with custom regex-based scanners to detect a wide range of security issues including XSS, SQL Injection, command injection, exposed secrets, and vulnerable dependencies.
+---
+
+## Visao Geral
+
+GitScan e uma aplicacao full-stack que escaneia repositorios GitHub em busca de vulnerabilidades de seguranca e fornece correcoes geradas por IA. Integra multiplas ferramentas de seguranca profissionais (Semgrep, Bandit) com scanners personalizados baseados em regex para detectar uma ampla gama de problemas de seguranca, incluindo XSS, SQL Injection, Command Injection, credenciais expostas e dependencias vulneraveis.
 
 ## Features
 
-### Security Scanning
-- **Multi-Scanner Architecture**: Combines professional tools (Semgrep, Bandit, Safety) with custom regex scanners
-- **50+ Vulnerability Types**: Detects XSS, SQL Injection, Command Injection, Path Traversal, Exposed Secrets, and more
-- **Low False Positive Rate**: Intelligent deduplication and context-aware filtering
-- **Dependency Scanning**: Identifies vulnerable packages in `package.json`, `requirements.txt`, etc.
+### Escaneamento de Seguranca
+- **Arquitetura Multi-Scanner**: Combina ferramentas profissionais (Semgrep, Bandit, Safety) com scanners regex customizados
+- **50+ Tipos de Vulnerabilidades**: Detecta XSS, SQL Injection, Command Injection, Path Traversal, Segredos Expostos e mais
+- **Baixa Taxa de Falsos Positivos**: Deduplicacao inteligente e filtragem contextual
+- **Escaneamento de Dependencias**: Identifica pacotes vulneraveis em `package.json`, `requirements.txt`, etc.
+- **Selecao Personalizada de Scanners**: Escolha quais scanners executar para cada scan
 
-### AI-Powered Fixes
-- **Multiple LLM Providers**: Supports OpenAI (GPT-4), Anthropic (Claude), and Google (Gemini)
-- **Automatic Code Fixes**: Generates secure code replacements for detected vulnerabilities
-- **One-Click PR Creation**: Automatically creates GitHub Pull Requests with security fixes
+### Correcoes com IA
+- **Multiplos Provedores de LLM**: Suporta OpenAI (GPT-4o, o1, o3-mini), Anthropic (Claude 4.5 Sonnet/Opus), e Google (Gemini 3 Pro/Flash)
+- **Correcoes Automaticas de Codigo**: Gera substituicoes de codigo seguras para vulnerabilidades detectadas
+- **Criacao de PR com Um Clique**: Cria automaticamente Pull Requests no GitHub com correcoes de seguranca
+- **Selecao de Modelo por Provedor**: Escolha o modelo especifico de IA para cada provedor
 
-### Dashboard & Management
-- **Real-time Scan Progress**: Live updates during repository scanning
-- **Vulnerability Dashboard**: Overview of all security issues across repositories
-- **Severity Classification**: CRITICAL, HIGH, MEDIUM, LOW, INFO levels
-- **Fix History**: Track all generated fixes and their status
+### Dashboard e Gerenciamento
+- **Progresso de Scan em Tempo Real**: Atualizacoes ao vivo durante o escaneamento
+- **Dashboard de Vulnerabilidades**: Visao geral de todos os problemas de seguranca
+- **Classificacao de Severidade**: CRITICAL, HIGH, MEDIUM, LOW, INFO
+- **Historico de Correcoes**: Acompanhe todas as correcoes geradas e seus status
+- **Badges de Status**: Indicadores visuais para vulnerabilidades corrigidas
 
-## Architecture
+### Interface Moderna
+- **Design Brutalista Minimalista**: Interface moderna com bordas solidas e alto contraste
+- **Tema Claro/Escuro**: Suporte completo a temas
+- **Responsividade Total**: Funciona em desktop, tablet e mobile
+- **Animacoes Sutis**: Transicoes suaves para melhor experiencia do usuario
+
+## Arquitetura
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         Frontend (Next.js)                       │
-│                      http://localhost:8080                       │
-└─────────────────────────────────────────────────────────────────┘
-                                  │
-                                  ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     Backend API (Express.js)                     │
-│                      http://localhost:3002                       │
-│  • Authentication (GitHub OAuth)                                 │
-│  • Repository Management                                         │
-│  • Scan Orchestration                                           │
-│  • Vulnerability CRUD                                           │
-│  • GitHub PR Creation                                           │
-└─────────────────────────────────────────────────────────────────┘
-                    │                           │
-                    ▼                           ▼
-┌──────────────────────────────┐  ┌──────────────────────────────┐
-│      Scanner Service         │  │        PostgreSQL            │
-│   http://localhost:5000      │  │     (Data Storage)           │
-│  • Semgrep Scanner           │  └──────────────────────────────┘
-│  • Bandit Scanner            │
-│  • Dependency Scanner        │  ┌──────────────────────────────┐
-│  • XSS Scanner               │  │          Redis               │
-│  • Injection Scanner         │  │    (Queue & Cache)           │
-│  • Secrets Scanner           │  └──────────────────────────────┘
-│  • LLM Fix Generation        │
-└──────────────────────────────┘
++------------------------------------------------------------------+
+|                         Frontend (Next.js 14)                     |
+|                      http://localhost:8080                        |
+|  • Design Brutalista Minimalista                                  |
+|  • React 18 + TypeScript                                         |
+|  • Tailwind CSS + Radix UI                                       |
++------------------------------------------------------------------+
+                                  |
+                                  v
++------------------------------------------------------------------+
+|                     Backend API (Express.js)                      |
+|                      http://localhost:3002                        |
+|  • Autenticacao (GitHub OAuth)                                   |
+|  • Gerenciamento de Repositorios                                 |
+|  • Orquestracao de Scans                                         |
+|  • CRUD de Vulnerabilidades                                      |
+|  • Criacao de Pull Requests                                      |
+|  • API de Modelos LLM                                            |
++------------------------------------------------------------------+
+                    |                           |
+                    v                           v
++-------------------------------+  +-------------------------------+
+|      Scanner Service          |  |        PostgreSQL 16          |
+|   http://localhost:5000       |  |     (Armazenamento)           |
+|  • Semgrep Scanner            |  +-------------------------------+
+|  • Bandit Scanner             |
+|  • Dependency Scanner         |  +-------------------------------+
+|  • XSS Scanner                |  |          Redis 7              |
+|  • Injection Scanner          |  |    (Filas e Cache)            |
+|  • Secrets Scanner            |  +-------------------------------+
+|  • Geracao de Fix com LLM     |
+|  • Integracao Gemini 3        |
++-------------------------------+
 ```
 
-## Tech Stack
+## Stack Tecnologico
 
-| Component | Technology |
-|-----------|------------|
-| Frontend | Next.js 14, React 18, Tailwind CSS, React Query |
-| Backend | Node.js, Express, TypeScript, Prisma ORM |
-| Scanner | Python 3.11, Flask, Semgrep, Bandit, Safety |
+| Componente | Tecnologia |
+|------------|------------|
+| Frontend | Next.js 14, React 18, TypeScript, Tailwind CSS, React Query, Radix UI |
+| Backend | Node.js 20, Express, TypeScript, Prisma ORM |
+| Scanner | Python 3.11, Flask, Semgrep, Bandit, Safety, Celery |
 | Database | PostgreSQL 16 |
 | Cache | Redis 7 |
-| Infrastructure | Docker, Docker Compose |
+| LLM SDKs | OpenAI >=1.60.0, Anthropic >=0.45.0, Google GenAI >=0.8.4 |
+| Infraestrutura | Docker, Docker Compose |
 
-## Installation
+## Modelos de IA Suportados
 
-### Prerequisites
+### OpenAI
+| Modelo | Descricao |
+|--------|-----------|
+| GPT-4o | Mais capaz, multimodal (Recomendado) |
+| GPT-4o Mini | Rapido e economico |
+| o3 Mini | Raciocinio mais avancado (Mais Recente) |
+| o1 | Raciocinio avancado |
+| o1 Mini | Raciocinio rapido |
+| GPT-4 Turbo | Alta performance |
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (recommended)
-- OR Node.js 20+, Python 3.11+, PostgreSQL 16, Redis 7
-- GitHub Account with Personal Access Token
+### Anthropic
+| Modelo | Descricao |
+|--------|-----------|
+| Claude 4.5 Sonnet | Ultimo modelo, mais inteligente (Mais Recente) |
+| Claude 4.5 Opus | Maxima capacidade (Premium) |
+| Claude 3.5 Sonnet | Equilibrio ideal (Recomendado) |
+| Claude 3.5 Haiku | Ultra rapido (Economico) |
+| Claude 3 Opus | Alta capacidade |
 
-### Quick Start with Docker (Recommended)
+### Google Gemini
+| Modelo | Descricao |
+|--------|-----------|
+| Gemini 3 Pro | Mais inteligente, raciocinio avancado e agentes (Mais Recente) |
+| Gemini 3 Flash | Inteligencia Pro na velocidade Flash (Recomendado) |
+| Gemini 2.5 Pro | Producao, raciocinio aprimorado |
+| Gemini 2.5 Flash | Estavel para producao |
+| Gemini 2.0 Flash | Multimodal (retirando Mar/2026) |
+| Gemini 2.0 Flash Lite | Leve e rapido |
 
-1. **Clone the repository**
+## Instalacao
+
+### Pre-requisitos
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (recomendado)
+- OU Node.js 20+, Python 3.11+, PostgreSQL 16, Redis 7
+- Conta GitHub com Personal Access Token
+
+### Inicio Rapido com Docker (Recomendado)
+
+1. **Clone o repositorio**
    ```bash
-   git clone https://github.com/NoelCunha/gitscan.git
+   git clone https://github.com/pressadigital/gitscan.git
    cd gitscan
    ```
 
-2. **Create environment files**
+2. **Crie os arquivos de ambiente**
 
    Backend (`backend/.env`):
    ```env
@@ -120,17 +171,17 @@ GitScan is a full-stack application that scans GitHub repositories for security 
    NEXT_PUBLIC_API_URL=http://localhost:3002/api/v1
    ```
 
-3. **Start all services**
+3. **Inicie todos os servicos**
    ```bash
    docker-compose up -d --build
    ```
 
-4. **Access the application**
+4. **Acesse a aplicacao**
    - Frontend: http://localhost:8080
    - Backend API: http://localhost:3002
    - Scanner Service: http://localhost:5000
 
-### Manual Installation
+### Instalacao Manual
 
 #### Backend Setup
 
@@ -160,208 +211,276 @@ pip install -r requirements.txt
 flask run --host=0.0.0.0 --port=5000
 ```
 
-## Usage
+## Uso
 
-### 1. Authentication
+### 1. Autenticacao
 
-GitScan uses GitHub Personal Access Tokens for authentication:
+GitScan usa GitHub Personal Access Tokens para autenticacao:
 
-1. Go to [GitHub Settings > Tokens](https://github.com/settings/tokens)
-2. Generate a new token with `repo` and `read:user` permissions
-3. Use the token to login at http://localhost:8080
+1. Va para [GitHub Settings > Tokens](https://github.com/settings/tokens)
+2. Gere um novo token com permissoes `repo` e `read:user`
+3. Use o token para fazer login em http://localhost:8080
 
-### 2. Adding Repositories
+### 2. Adicionando Repositorios
 
-1. After login, go to "Repositories"
-2. Click "Sync Repositories" to import from GitHub
-3. Select repositories you want to scan
+1. Apos o login, va para "Repositorios"
+2. Clique em "Sincronizar Repositorios" para importar do GitHub
+3. Selecione os repositorios que deseja escanear
 
-### 3. Running Scans
+### 3. Executando Scans
 
-1. Click "New Scan" or select a repository
-2. Choose the branch to scan
-3. Click "Start Scan"
-4. Monitor progress in real-time
+1. Clique em "Novo Scan" ou selecione um repositorio
+2. Escolha a branch para escanear
+3. Selecione os scanners que deseja utilizar
+4. Clique em "Iniciar Scan"
+5. Monitore o progresso em tempo real
 
-### 4. Viewing Vulnerabilities
+### 4. Visualizando Vulnerabilidades
 
-1. After scan completion, view results in "Vulnerabilities"
-2. Click on any vulnerability for details
-3. View code snippets, descriptions, and remediation suggestions
+1. Apos a conclusao do scan, veja os resultados em "Vulnerabilidades"
+2. Clique em qualquer vulnerabilidade para detalhes
+3. Veja trechos de codigo, descricoes e sugestoes de remediacao
 
-### 5. Generating AI Fixes
+### 5. Gerando Correcoes com IA
 
-1. Select a vulnerability
-2. Click "Generate Fix with AI"
-3. Choose LLM provider (requires API key in Settings)
-4. Review the generated fix
+1. Selecione uma vulnerabilidade
+2. Clique em "Gerar Correcao com IA"
+3. Escolha o provedor e modelo de LLM (requer chave de API em Configuracoes)
+4. Revise a correcao gerada
 
-### 6. Creating Pull Requests
+### 6. Criando Pull Requests
 
-1. After reviewing a fix, click "Apply Fix to GitHub"
-2. GitScan will:
-   - Create a new branch
-   - Commit the fix
-   - Open a Pull Request
-3. Review and merge the PR on GitHub
+1. Apos revisar uma correcao, clique em "Aplicar Fix no GitHub"
+2. GitScan ira:
+   - Criar uma nova branch
+   - Fazer commit da correcao
+   - Abrir um Pull Request
+3. Revise e faca merge do PR no GitHub
 
-## API Reference
+## Referencia da API
 
-### Authentication
+### Autenticacao
 
 ```
 POST /api/v1/auth/token
 Body: { "token": "github_personal_access_token" }
 ```
 
-### Repositories
+### Repositorios
 
 ```
-GET    /api/v1/repositories          # List repositories
-POST   /api/v1/repositories/sync     # Sync from GitHub
-DELETE /api/v1/repositories/:id      # Remove repository
+GET    /api/v1/repositories          # Listar repositorios
+POST   /api/v1/repositories/sync     # Sincronizar do GitHub
+DELETE /api/v1/repositories/:id      # Remover repositorio
 ```
 
 ### Scans
 
 ```
-GET    /api/v1/scans                 # List scans
-POST   /api/v1/scans                 # Start new scan
-GET    /api/v1/scans/:id             # Get scan details
-GET    /api/v1/scans/stats           # Get scan statistics
+GET    /api/v1/scans                 # Listar scans
+POST   /api/v1/scans                 # Iniciar novo scan
+GET    /api/v1/scans/:id             # Obter detalhes do scan
+GET    /api/v1/scans/stats           # Obter estatisticas
 ```
 
-### Vulnerabilities
+### Vulnerabilidades
 
 ```
-GET    /api/v1/vulnerabilities       # List vulnerabilities
-GET    /api/v1/vulnerabilities/:id   # Get vulnerability details
-PATCH  /api/v1/vulnerabilities/:id   # Update status
-POST   /api/v1/vulnerabilities/:id/generate-fix  # Generate AI fix
-POST   /api/v1/vulnerabilities/:id/apply-fix     # Create PR with fix
+GET    /api/v1/vulnerabilities       # Listar vulnerabilidades
+GET    /api/v1/vulnerabilities/:id   # Obter detalhes
+PATCH  /api/v1/vulnerabilities/:id   # Atualizar status
+POST   /api/v1/vulnerabilities/:id/generate-fix  # Gerar correcao IA
+POST   /api/v1/vulnerabilities/:id/apply-fix     # Criar PR com correcao
 ```
 
-### API Keys
+### Chaves de API
 
 ```
-GET    /api/v1/api-keys              # List configured API keys
-POST   /api/v1/api-keys              # Add new API key
-DELETE /api/v1/api-keys/:provider    # Remove API key
+GET    /api/v1/api-keys              # Listar chaves configuradas
+POST   /api/v1/api-keys              # Adicionar nova chave
+DELETE /api/v1/api-keys/:provider    # Remover chave
 ```
 
-## Security Scanners
+### Modelos LLM
+
+```
+GET    /api/v1/llm/providers         # Listar provedores de LLM
+GET    /api/v1/llm/models            # Listar todos os modelos
+GET    /api/v1/llm/models/:provider  # Listar modelos de um provedor
+```
+
+## Scanners de Seguranca
 
 ### Semgrep Scanner
-Professional static analysis tool supporting multiple languages with extensive rule sets.
+Ferramenta de analise estatica profissional suportando multiplas linguagens com conjuntos de regras extensivos.
 
 ### Bandit Scanner
-Python-specific security analyzer that finds common security issues.
+Analisador de seguranca especifico para Python que encontra problemas comuns de seguranca.
 
 ### Dependency Scanner
-Checks package manifests against vulnerability databases (Safety DB, npm audit).
+Verifica manifestos de pacotes contra bancos de dados de vulnerabilidades (Safety DB, npm audit).
 
-### Custom Regex Scanners
-- **XSS Scanner**: Detects Cross-Site Scripting vulnerabilities
+### Scanners Regex Customizados
+- **XSS Scanner**: Detecta vulnerabilidades de Cross-Site Scripting
 - **Injection Scanner**: SQL Injection, Command Injection, Path Traversal
-- **Secrets Scanner**: API keys, passwords, tokens in code
+- **Secrets Scanner**: Chaves de API, senhas, tokens no codigo
 
-## Vulnerability Categories
+## Categorias de Vulnerabilidades
 
-| Category | Description |
-|----------|-------------|
+| Categoria | Descricao |
+|-----------|-----------|
 | XSS | Cross-Site Scripting |
-| SQL_INJECTION | SQL Injection attacks |
-| COMMAND_INJECTION | OS Command Injection |
-| PATH_TRAVERSAL | Directory Traversal |
+| SQL_INJECTION | Ataques de SQL Injection |
+| COMMAND_INJECTION | Injecao de Comandos OS |
+| PATH_TRAVERSAL | Travessia de Diretorio |
 | SSRF | Server-Side Request Forgery |
 | XXE | XML External Entity |
-| DESERIALIZATION | Insecure Deserialization |
-| AUTHENTICATION | Authentication weaknesses |
-| AUTHORIZATION | Authorization/access control issues |
-| CRYPTOGRAPHY | Weak cryptographic implementations |
-| SECRETS_EXPOSURE | Exposed credentials and API keys |
-| DEPENDENCY | Known vulnerable packages |
-| CONFIGURATION | Security misconfiguration |
-| CODE_QUALITY | Code quality issues with security impact |
+| DESERIALIZATION | Deserializacao Insegura |
+| AUTHENTICATION | Fraquezas de Autenticacao |
+| AUTHORIZATION | Problemas de Autorizacao/Controle de Acesso |
+| CRYPTOGRAPHY | Implementacoes Criptograficas Fracas |
+| SECRETS_EXPOSURE | Credenciais e Chaves de API Expostas |
+| DEPENDENCY | Pacotes com Vulnerabilidades Conhecidas |
+| CONFIGURATION | Configuracao Incorreta de Seguranca |
+| CODE_QUALITY | Problemas de Qualidade de Codigo com Impacto em Seguranca |
 | CSRF | Cross-Site Request Forgery |
-| SESSION | Session management issues |
+| SESSION | Problemas de Gerenciamento de Sessao |
 | IDOR | Insecure Direct Object Reference |
-| MASS_ASSIGNMENT | Mass assignment vulnerabilities |
-| OPEN_REDIRECT | Open redirect vulnerabilities |
+| MASS_ASSIGNMENT | Vulnerabilidades de Mass Assignment |
+| OPEN_REDIRECT | Vulnerabilidades de Redirecionamento Aberto |
 
-## Environment Variables
+## Variaveis de Ambiente
 
 ### Backend
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | Required |
-| `REDIS_URL` | Redis connection string | Required |
-| `JWT_SECRET` | Secret for JWT tokens | Required |
-| `SCANNER_SERVICE_URL` | Scanner service URL | `http://scanner:5000` |
-| `FRONTEND_URL` | Frontend URL for CORS | `http://localhost:8080` |
+| Variavel | Descricao | Padrao |
+|----------|-----------|--------|
+| `DATABASE_URL` | String de conexao PostgreSQL | Obrigatorio |
+| `REDIS_URL` | String de conexao Redis | Obrigatorio |
+| `JWT_SECRET` | Segredo para tokens JWT | Obrigatorio |
+| `SCANNER_SERVICE_URL` | URL do servico Scanner | `http://scanner:5000` |
+| `FRONTEND_URL` | URL do Frontend para CORS | `http://localhost:8080` |
 
 ### Frontend
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NEXT_PUBLIC_API_URL` | Backend API URL | `http://localhost:3002/api/v1` |
+| Variavel | Descricao | Padrao |
+|----------|-----------|--------|
+| `NEXT_PUBLIC_API_URL` | URL da API Backend | `http://localhost:3002/api/v1` |
 
-## Docker Commands
+## Comandos Docker
 
 ```bash
-# Start all services
+# Iniciar todos os servicos
 docker-compose up -d
 
-# Rebuild and start
+# Reconstruir e iniciar
 docker-compose up -d --build
 
-# View logs
+# Ver logs
 docker-compose logs -f
 
-# Stop all services
+# Parar todos os servicos
 docker-compose down
 
-# Reset database
+# Resetar banco de dados
 docker-compose down -v
 docker-compose up -d
 ```
 
-## Recent Updates
+## Atualizacoes Recentes
 
-### v1.1.0 (January 2026)
-- **Bug Fix**: Fixed GitHub token decryption issue in Apply Fix feature
-- **New Scanners**: Added support for CSRF, Session, IDOR, Mass Assignment, and Open Redirect vulnerability detection
-- **Improved Error Handling**: Better error messages for GitHub authentication failures
-- **UI Improvements**: Enhanced vulnerability detail page with proper fix application feedback
+### v1.3.0 (Janeiro 2026)
+- **Gemini 3**: Suporte completo aos modelos Gemini 3 Pro e Gemini 3 Flash
+- **SDK Atualizado**: Google Generative AI SDK >=0.8.4 para acesso aos modelos mais recentes
+- **API de Modelos LLM**: Novos endpoints para listagem dinamica de modelos disponíveis
+- **Selecao de Modelos**: Interface para selecionar modelo especifico de cada provedor
 
-### v1.0.0 (Initial Release)
-- Multi-scanner architecture with Semgrep, Bandit, and custom regex scanners
-- AI-powered fix generation with OpenAI, Anthropic, and Google support
-- Automatic Pull Request creation for security fixes
-- Real-time scan progress monitoring
-- GitHub OAuth integration
+### v1.2.0 (Janeiro 2026)
+- **Design Brutalista**: Nova interface minimalista com bordas solidas e alto contraste
+- **Tema Moderno**: Cores primarias em amarelo/preto com tipografia bold
+- **Componentes Atualizados**: Buttons, cards e badges com estilo brutalista
+- **Responsividade**: Layout adaptativo para todos os tamanhos de tela
 
-## Contributing
+### v1.1.0 (Janeiro 2026)
+- **Bug Fix**: Corrigido problema de descriptografia do token GitHub no Apply Fix
+- **Novos Scanners**: Suporte para deteccao de CSRF, Session, IDOR, Mass Assignment e Open Redirect
+- **Melhor Tratamento de Erros**: Mensagens de erro mais claras para falhas de autenticacao GitHub
+- **Melhorias de UI**: Pagina de detalhes de vulnerabilidade aprimorada com feedback de aplicacao de fix
+- **Selecao de Scanners**: Permite escolher quais scanners executar em cada scan
+- **Badges de Status**: Indicadores visuais para vulnerabilidades corrigidas
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### v1.0.0 (Lancamento Inicial)
+- Arquitetura multi-scanner com Semgrep, Bandit e scanners regex customizados
+- Geracao de correcoes com IA usando OpenAI, Anthropic e Google
+- Criacao automatica de Pull Requests para correcoes de seguranca
+- Monitoramento de progresso de scan em tempo real
+- Integracao com GitHub OAuth
 
-## License
+---
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## Licenca e Direitos Autorais
 
-## Acknowledgments
+### Propriedade
 
-- [Semgrep](https://semgrep.dev/) - Static analysis engine
-- [Bandit](https://bandit.readthedocs.io/) - Python security linter
-- [Safety](https://pyup.io/safety/) - Dependency vulnerability checker
+**Este software e propriedade exclusiva da Pressa Digital.**
+
+- **Empresa**: Pressa Digital
+- **CNPJ**: 63.971.377/0001-08
+
+### Restricoes Comerciais
+
+**A VENDA, COMERCIALIZACAO, LICENCIAMENTO E DISTRIBUICAO COMERCIAL DESTE SOFTWARE E DE UNICA E EXCLUSIVA RESPONSABILIDADE DA PRESSA DIGITAL.**
+
+Qualquer pessoa fisica ou juridica que comercialize, venda, distribua comercialmente ou utilize este software para fins lucrativos sem autorizacao expressa e por escrito da Pressa Digital estara sujeita as sancoes previstas na legislacao brasileira vigente, incluindo:
+
+- **Lei no 9.610/1998** (Lei de Direitos Autorais)
+- **Lei no 9.609/1998** (Lei do Software)
+- **Codigo Civil Brasileiro**
+- **Codigo Penal Brasileiro**
+
+### Uso Permitido
+
+Este software e disponibilizado como **open source** apenas para:
+
+- Fins educacionais e de aprendizado
+- Uso pessoal nao comercial
+- Contribuicoes para o projeto (sujeitas a aprovacao)
+- Estudo da arquitetura e implementacao
+
+### Licenca Comercial
+
+Para obter uma licenca comercial, entre em contato com a Pressa Digital.
+
+Consulte o arquivo [LICENSE](LICENSE) para os termos completos da licenca.
+
+---
+
+## Contribuicoes
+
+Contribuicoes sao bem-vindas! Ao contribuir, voce concorda em ceder os direitos autorais da sua contribuicao a Pressa Digital.
+
+1. Faca um Fork do repositorio
+2. Crie uma branch de feature (`git checkout -b feature/nova-feature`)
+3. Commit suas mudancas (`git commit -m 'Adiciona nova feature'`)
+4. Push para a branch (`git push origin feature/nova-feature`)
+5. Abra um Pull Request
+
+---
+
+## Reconhecimentos
+
+- [Semgrep](https://semgrep.dev/) - Engine de analise estatica
+- [Bandit](https://bandit.readthedocs.io/) - Linter de seguranca Python
+- [Safety](https://pyup.io/safety/) - Verificador de vulnerabilidades de dependencias
+- [OpenAI](https://openai.com/) - GPT-4 e modelos de raciocinio
+- [Anthropic](https://anthropic.com/) - Claude e familia de modelos
+- [Google](https://ai.google.dev/) - Gemini e modelos de IA generativa
 
 ---
 
 <p align="center">
-  Made with ❤️ for secure code
+  <strong>GitScan</strong><br>
+  Desenvolvido por <a href="#">Pressa Digital</a><br>
+  CNPJ: 63.971.377/0001-08<br>
+  Todos os direitos reservados - 2024-2026
 </p>

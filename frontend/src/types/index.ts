@@ -162,6 +162,26 @@ export type LlmProvider = 'OPENAI' | 'ANTHROPIC' | 'GOOGLE';
 export type FixStatus = 'PENDING' | 'APPLIED' | 'FAILED' | 'REJECTED';
 export type PrStatus = 'OPEN' | 'MERGED' | 'CLOSED';
 
+// LLM Model types
+export interface LlmModel {
+  id: string;
+  name: string;
+  description: string;
+  context_window: number;
+  max_output: number;
+  is_default: boolean;
+}
+
+export interface LlmProviderConfig {
+  name: string;
+  display_name: string;
+  models: LlmModel[];
+}
+
+export interface LlmProvidersResponse {
+  [key: string]: LlmProviderConfig;
+}
+
 // API Response types
 export interface ApiResponse<T> {
   success: boolean;

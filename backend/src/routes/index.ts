@@ -4,6 +4,7 @@ import repositoryRoutes from './repository.routes.js';
 import scanRoutes from './scan.routes.js';
 import vulnerabilityRoutes from './vulnerability.routes.js';
 import apikeyRoutes from './apikey.routes.js';
+import llmRoutes from './llm.routes.js';
 import { checkDatabaseHealth } from '../config/database.js';
 
 const router = Router();
@@ -27,5 +28,6 @@ router.use('/repositories', repositoryRoutes);
 router.use('/scans', scanRoutes);
 router.use('/vulnerabilities', vulnerabilityRoutes);
 router.use('/api-keys', apikeyRoutes);
+router.use('/llm', llmRoutes);
 
 export default router;

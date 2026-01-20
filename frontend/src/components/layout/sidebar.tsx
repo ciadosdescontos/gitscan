@@ -28,21 +28,21 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="flex h-full w-64 flex-col border-r bg-card">
+    <div className="flex h-full w-64 flex-col border-r-4 border-foreground bg-card">
       {/* Logo */}
-      <div className="flex h-16 items-center gap-2 border-b px-4">
+      <div className="flex h-16 items-center gap-2 border-b-4 border-foreground px-4 bg-foreground">
         <Image
           src="/logo.png"
           alt="GitScan Logo"
           width={140}
           height={40}
-          className="dark:invert"
+          className="invert"
           priority
         />
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 space-y-2 px-3 py-4">
         {navigation.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
@@ -50,13 +50,13 @@ export function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-3 px-3 py-3 text-sm font-bold uppercase tracking-wider transition-all duration-150 border-2',
                 isActive
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  ? 'bg-foreground text-background border-foreground shadow-brutal'
+                  : 'text-foreground border-transparent hover:border-foreground hover:bg-secondary'
               )}
             >
-              <item.icon className="h-5 w-5" />
+              <item.icon className="h-5 w-5" strokeWidth={2.5} />
               {item.name}
             </Link>
           );
@@ -64,7 +64,7 @@ export function Sidebar() {
       </nav>
 
       {/* Secondary Navigation */}
-      <div className="border-t px-3 py-4">
+      <div className="border-t-4 border-foreground px-3 py-4">
         {secondaryNavigation.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
@@ -72,13 +72,13 @@ export function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-3 px-3 py-3 text-sm font-bold uppercase tracking-wider transition-all duration-150 border-2',
                 isActive
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  ? 'bg-foreground text-background border-foreground shadow-brutal'
+                  : 'text-foreground border-transparent hover:border-foreground hover:bg-secondary'
               )}
             >
-              <item.icon className="h-5 w-5" />
+              <item.icon className="h-5 w-5" strokeWidth={2.5} />
               {item.name}
             </Link>
           );
@@ -86,12 +86,12 @@ export function Sidebar() {
       </div>
 
       {/* Quick Scan */}
-      <div className="border-t p-4">
+      <div className="border-t-4 border-foreground p-4">
         <Link
           href="/scans/new"
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          className="flex w-full items-center justify-center gap-2 border-4 border-foreground bg-brutal-yellow px-4 py-3 text-sm font-bold uppercase tracking-wider text-foreground shadow-brutal transition-all duration-150 hover:shadow-none hover:translate-x-1 hover:translate-y-1"
         >
-          <Zap className="h-4 w-4" />
+          <Zap className="h-5 w-5" strokeWidth={2.5} />
           Novo Scan
         </Link>
       </div>

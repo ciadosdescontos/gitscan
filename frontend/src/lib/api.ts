@@ -96,3 +96,9 @@ export const apiKeyApi = {
   verifyApiKey: (provider: string) => api.get(`/api-keys/${provider}/verify`),
   getLlmSettings: () => api.get('/api-keys/settings'),
 };
+
+export const llmApi = {
+  getProviders: () => api.get('/llm/providers'),
+  getModels: () => api.get('/llm/models'),
+  getProviderModels: (provider: string) => api.get(`/llm/models/${provider}`),
+};

@@ -4,44 +4,51 @@
 
 @layer base {
   :root {
+    /* Brutalista: Paleta minimalista com alto contraste */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 0 0% 0%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    --card-foreground: 0 0% 0%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 0 0% 0%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 0%;
+    --input: 0 0% 0%;
+    --ring: 0 0% 0%;
+    --radius: 0px;
+
+    /* Cores de destaque brutalistas */
+    --brutal-yellow: 60 100% 50%;
+    --brutal-red: 0 100% 50%;
+    --brutal-blue: 220 100% 50%;
+    --brutal-green: 120 100% 35%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --background: 0 0% 5%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 0 0% 100%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 100%;
+    --input: 0 0% 100%;
+    --ring: 0 0% 100%;
   }
 }
 
@@ -49,55 +56,159 @@
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "ss01", "ss02", "cv01";
+  }
+
+  /* Brutalista: Seleção de texto com cor forte */
+  ::selection {
+    @apply bg-foreground text-background;
   }
 }
 
-/* Custom scrollbar */
+/* Brutalista: Scrollbar minimalista */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-muted;
+  @apply bg-background;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-muted-foreground/30 rounded-full;
+  @apply bg-foreground;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-muted-foreground/50;
+  @apply bg-foreground/80;
 }
 
-/* Code syntax highlighting adjustments */
+/* Brutalista: Animações sutis */
+@layer utilities {
+  .brutal-border {
+    @apply border-2 border-foreground;
+  }
+
+  .brutal-border-thick {
+    @apply border-4 border-foreground;
+  }
+
+  .brutal-shadow {
+    box-shadow: 4px 4px 0px 0px hsl(var(--foreground));
+  }
+
+  .brutal-shadow-lg {
+    box-shadow: 8px 8px 0px 0px hsl(var(--foreground));
+  }
+
+  .brutal-hover {
+    @apply transition-all duration-150 ease-out;
+  }
+
+  .brutal-hover:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px 0px hsl(var(--foreground));
+  }
+
+  .brutal-hover:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px 0px hsl(var(--foreground));
+  }
+
+  .brutal-link {
+    @apply relative inline-block;
+  }
+
+  .brutal-link::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-full h-0.5 bg-foreground scale-x-0 origin-left transition-transform duration-200;
+  }
+
+  .brutal-link:hover::after {
+    @apply scale-x-100;
+  }
+
+  /* Animação de entrada */
+  .brutal-fade-in {
+    animation: brutalFadeIn 0.3s ease-out;
+  }
+
+  @keyframes brutalFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Animação de pulso sutil */
+  .brutal-pulse {
+    animation: brutalPulse 2s infinite;
+  }
+
+  @keyframes brutalPulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+}
+
+/* Code syntax highlighting - Brutalista */
 .code-block {
-  @apply rounded-lg overflow-hidden text-sm;
+  @apply overflow-hidden text-sm border-2 border-foreground;
 }
 
 .code-block pre {
-  @apply !bg-zinc-900 !p-4;
+  @apply !bg-foreground !text-background !p-4;
 }
 
-/* Severity badges */
+/* Severity badges - Brutalista */
 .severity-critical {
-  @apply bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400;
+  @apply bg-[hsl(var(--brutal-red))] text-white border-2 border-foreground font-bold;
 }
 
 .severity-high {
-  @apply bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400;
+  @apply bg-[hsl(var(--brutal-yellow))] text-black border-2 border-foreground font-bold;
 }
 
 .severity-medium {
-  @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400;
+  @apply bg-[hsl(var(--brutal-blue))] text-white border-2 border-foreground font-bold;
 }
 
 .severity-low {
-  @apply bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400;
+  @apply bg-secondary text-foreground border-2 border-foreground font-bold;
 }
 
 .severity-info {
-  @apply bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400;
+  @apply bg-background text-foreground border-2 border-foreground font-bold;
+}
+
+/* Brutalista: Focus states acessíveis */
+@layer base {
+  *:focus-visible {
+    @apply outline-none ring-2 ring-foreground ring-offset-2 ring-offset-background;
+  }
+}
+
+/* Marquee animation para elementos decorativos */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
 }

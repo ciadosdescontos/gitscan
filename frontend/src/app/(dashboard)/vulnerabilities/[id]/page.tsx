@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -13,25 +13,20 @@ import {
   GitPullRequest,
   RefreshCw,
   ExternalLink,
+  ChevronDown,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { vulnerabilityApi } from '@/lib/api';
+import { vulnerabilityApi, llmApi } from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/utils';
-import type { Vulnerability, Fix, LlmProvider } from '@/types';
+import type { Vulnerability, Fix, LlmProvider, LlmModel, LlmProviderConfig } from '@/types';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import * as Select from '@radix-ui/react-select';
 import * as Tabs from '@radix-ui/react-tabs';
-
-const providers: { value: LlmProvider; label: string; description: string }[] = [
-  { value: 'OPENAI', label: 'OpenAI GPT-4', description: 'Modelo mais preciso para código' },
-  { value: 'ANTHROPIC', label: 'Claude 3', description: 'Excelente para análise de contexto' },
-  { value: 'GOOGLE', label: 'Gemini Pro', description: 'Rápido e eficiente' },
-];
 
 export default function VulnerabilityDetailPage() {
   const params = useParams();
@@ -43,8 +38,29 @@ export default function VulnerabilityDetailPage() {
   const [selectedProvider, setSelectedProvider] = useState<LlmProvider>(
     user?.defaultLlmProvider || 'OPENAI'
   );
+  const [selectedModel, setSelectedModel] = useState<string>('');
   const [copiedCode, setCopiedCode] = useState(false);
   const [selectedFix, setSelectedFix] = useState<Fix | null>(null);
+
+  // Fetch LLM providers and models
+  const { data: providersData } = useQuery({
+    queryKey: ['llm-providers'],
+    queryFn: async () => {
+      const response = await llmApi.getProviders();
+      return response.data.data as Record<string, LlmProviderConfig>;
+    },
+  });
+
+  // Update selected model when provider changes
+  useEffect(() => {
+    if (providersData && selectedProvider) {
+      const provider = providersData[selectedProvider];
+      if (provider) {
+        const defaultModel = provider.models.find((m) => m.is_default);
+        setSelectedModel(defaultModel?.id || provider.models[0]?.id || '');
+      }
+    }
+  }, [selectedProvider, providersData]);
 
   // Fetch vulnerability details
   const { data: vulnerability, isLoading } = useQuery({
@@ -57,7 +73,7 @@ export default function VulnerabilityDetailPage() {
 
   // Generate fix mutation
   const generateFixMutation = useMutation({
-    mutationFn: () => vulnerabilityApi.generateFix(vulnId, selectedProvider),
+    mutationFn: () => vulnerabilityApi.generateFix(vulnId, selectedProvider, selectedModel),
     onSuccess: () => {
       toast.success('Fix gerado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['vulnerability', vulnId] });
@@ -90,7 +106,6 @@ export default function VulnerabilityDetailPage() {
       } else {
         toast.success('Fix aplicado com sucesso!');
       }
-      // Invalidate all related queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ['vulnerability', vulnId] });
       queryClient.invalidateQueries({ queryKey: ['fixes', vulnId] });
       queryClient.invalidateQueries({ queryKey: ['vulnerabilities'] });
@@ -147,10 +162,14 @@ export default function VulnerabilityDetailPage() {
     return langMap[ext || ''] || 'javascript';
   };
 
+  // Get current provider config
+  const currentProvider = providersData?.[selectedProvider];
+  const currentModels = currentProvider?.models || [];
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <div className="h-8 w-8 animate-spin border-4 border-foreground border-t-transparent" />
       </div>
     );
   }
@@ -178,12 +197,12 @@ export default function VulnerabilityDetailPage() {
           </Button>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold">{vulnerability.title}</h1>
+              <h1 className="text-2xl font-black uppercase tracking-tight">{vulnerability.title}</h1>
               <Badge variant={vulnerability.severity.toLowerCase() as any}>
                 {vulnerability.severity}
               </Badge>
             </div>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground font-mono text-sm">
               {vulnerability.filePath}:{vulnerability.startLine}
             </p>
           </div>
@@ -195,18 +214,19 @@ export default function VulnerabilityDetailPage() {
             value={vulnerability.status}
             onValueChange={(value) => updateStatusMutation.mutate(value)}
           >
-            <Select.Trigger className="flex h-9 items-center gap-2 rounded-md border bg-background px-3 text-sm">
+            <Select.Trigger className="flex h-10 items-center gap-2 border-2 border-foreground bg-background px-4 text-sm font-bold uppercase">
               <Select.Value />
+              <ChevronDown className="h-4 w-4" />
             </Select.Trigger>
             <Select.Portal>
-              <Select.Content className="rounded-md border bg-card p-1 shadow-lg">
+              <Select.Content className="border-2 border-foreground bg-card p-1 shadow-brutal">
                 <Select.Viewport>
                   {['OPEN', 'IN_PROGRESS', 'FIXED', 'WONT_FIX', 'FALSE_POSITIVE'].map(
                     (status) => (
                       <Select.Item
                         key={status}
                         value={status}
-                        className="cursor-pointer rounded px-3 py-2 text-sm hover:bg-accent"
+                        className="cursor-pointer px-4 py-2 text-sm font-bold uppercase hover:bg-foreground hover:text-background focus:outline-none focus:bg-foreground focus:text-background"
                       >
                         <Select.ItemText>{status.replace('_', ' ')}</Select.ItemText>
                       </Select.Item>
@@ -226,24 +246,24 @@ export default function VulnerabilityDetailPage() {
           {/* Details Card */}
           <Card>
             <CardHeader>
-              <CardTitle>Detalhes</CardTitle>
+              <CardTitle>DETALHES</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Descrição</p>
+                <p className="text-sm font-bold uppercase text-muted-foreground">Descrição</p>
                 <p className="mt-1">{vulnerability.description}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Categoria</p>
+                  <p className="text-sm font-bold uppercase text-muted-foreground">Categoria</p>
                   <Badge variant="outline" className="mt-1">
                     {vulnerability.category}
                   </Badge>
                 </div>
                 {vulnerability.cweId && (
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">CWE</p>
+                    <p className="text-sm font-bold uppercase text-muted-foreground">CWE</p>
                     <a
                       href={`https://cwe.mitre.org/data/definitions/${vulnerability.cweId.replace(
                         'CWE-',
@@ -251,7 +271,7 @@ export default function VulnerabilityDetailPage() {
                       )}.html`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-1 flex items-center gap-1 text-primary hover:underline"
+                      className="mt-1 flex items-center gap-1 text-foreground font-bold hover:underline"
                     >
                       {vulnerability.cweId}
                       <ExternalLink className="h-3 w-3" />
@@ -261,8 +281,8 @@ export default function VulnerabilityDetailPage() {
               </div>
 
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Localização</p>
-                <p className="mt-1 font-mono text-sm">
+                <p className="text-sm font-bold uppercase text-muted-foreground">Localização</p>
+                <p className="mt-1 font-mono text-sm bg-foreground text-background px-2 py-1 inline-block">
                   {vulnerability.filePath}:{vulnerability.startLine}-{vulnerability.endLine}
                 </p>
               </div>
@@ -272,9 +292,9 @@ export default function VulnerabilityDetailPage() {
           {/* Code Card */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Código Vulnerável</CardTitle>
+              <CardTitle>CÓDIGO VULNERÁVEL</CardTitle>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={() => copyToClipboard(vulnerability.codeSnippet || '')}
               >
@@ -283,12 +303,12 @@ export default function VulnerabilityDetailPage() {
                 ) : (
                   <Copy className="mr-2 h-4 w-4" />
                 )}
-                Copiar
+                COPIAR
               </Button>
             </CardHeader>
             <CardContent>
               {vulnerability.codeSnippet ? (
-                <div className="code-block overflow-hidden rounded-lg">
+                <div className="code-block overflow-hidden border-2 border-foreground">
                   <SyntaxHighlighter
                     language={language}
                     style={vscDarkPlus}
@@ -302,7 +322,7 @@ export default function VulnerabilityDetailPage() {
                       return {
                         style: {
                           backgroundColor: isVulnerable
-                            ? 'rgba(239, 68, 68, 0.2)'
+                            ? 'rgba(239, 68, 68, 0.3)'
                             : undefined,
                           display: 'block',
                         },
@@ -322,7 +342,7 @@ export default function VulnerabilityDetailPage() {
           {vulnerability.fixes && vulnerability.fixes.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Fixes Gerados</CardTitle>
+                <CardTitle>FIXES GERADOS</CardTitle>
                 <CardDescription>
                   Correções sugeridas pela IA para esta vulnerabilidade
                 </CardDescription>
@@ -335,12 +355,12 @@ export default function VulnerabilityDetailPage() {
                     setSelectedFix(fix || null);
                   }}
                 >
-                  <Tabs.List className="mb-4 flex gap-2 border-b">
+                  <Tabs.List className="mb-4 flex gap-2 border-b-2 border-foreground">
                     {vulnerability.fixes.map((fix, index) => (
                       <Tabs.Trigger
                         key={fix.id}
                         value={fix.id}
-                        className="border-b-2 border-transparent px-4 py-2 text-sm data-[state=active]:border-primary"
+                        className="border-b-4 border-transparent px-4 py-2 text-sm font-bold uppercase data-[state=active]:border-foreground"
                       >
                         Fix #{index + 1} ({fix.llmProvider})
                       </Tabs.Trigger>
@@ -350,12 +370,12 @@ export default function VulnerabilityDetailPage() {
                   {vulnerability.fixes.map((fix) => (
                     <Tabs.Content key={fix.id} value={fix.id} className="space-y-4">
                       {/* Fix Info */}
-                      <div className="flex items-center justify-between rounded-lg bg-muted p-4">
+                      <div className="flex items-center justify-between border-2 border-foreground p-4">
                         <div>
-                          <p className="text-sm font-medium">
-                            Gerado por: {fix.llmProvider} ({fix.llmModel})
+                          <p className="text-sm font-bold uppercase">
+                            {fix.llmProvider} • {fix.llmModel}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-muted-foreground font-mono">
                             {formatDate(fix.createdAt)}
                           </p>
                         </div>
@@ -385,8 +405,8 @@ export default function VulnerabilityDetailPage() {
                       {/* Explanation */}
                       {fix.explanation && (
                         <div>
-                          <p className="mb-2 text-sm font-medium">Explicação</p>
-                          <p className="rounded-lg bg-muted p-3 text-sm">
+                          <p className="mb-2 text-sm font-bold uppercase">Explicação</p>
+                          <p className="border-l-4 border-foreground bg-secondary p-4 text-sm">
                             {fix.explanation}
                           </p>
                         </div>
@@ -395,17 +415,17 @@ export default function VulnerabilityDetailPage() {
                       {/* Fixed Code */}
                       <div>
                         <div className="mb-2 flex items-center justify-between">
-                          <p className="text-sm font-medium">Código Corrigido</p>
+                          <p className="text-sm font-bold uppercase">Código Corrigido</p>
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={() => copyToClipboard(fix.fixedCode)}
                           >
                             <Copy className="mr-2 h-4 w-4" />
-                            Copiar
+                            COPIAR
                           </Button>
                         </div>
-                        <div className="code-block overflow-hidden rounded-lg">
+                        <div className="code-block overflow-hidden border-2 border-foreground">
                           <SyntaxHighlighter
                             language={language}
                             style={vscDarkPlus}
@@ -424,7 +444,7 @@ export default function VulnerabilityDetailPage() {
                           isLoading={applyFixMutation.isPending}
                         >
                           <GitPullRequest className="mr-2 h-4 w-4" />
-                          Criar Pull Request com este Fix
+                          CRIAR PULL REQUEST
                         </Button>
                       )}
                     </Tabs.Content>
@@ -442,7 +462,7 @@ export default function VulnerabilityDetailPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5" />
-                Gerar Fix com IA
+                GERAR FIX COM IA
               </CardTitle>
               <CardDescription>
                 Use inteligência artificial para gerar uma correção automática
@@ -451,33 +471,75 @@ export default function VulnerabilityDetailPage() {
             <CardContent className="space-y-4">
               {/* Provider Selection */}
               <div>
-                <label className="mb-2 block text-sm font-medium">
+                <label className="mb-2 block text-sm font-bold uppercase">
                   Provedor de IA
                 </label>
                 <div className="space-y-2">
-                  {providers.map((provider) => (
+                  {providersData && Object.entries(providersData).map(([key, provider]) => (
                     <button
-                      key={provider.value}
-                      onClick={() => setSelectedProvider(provider.value)}
-                      className={`flex w-full items-center justify-between rounded-lg border p-3 text-left transition-colors ${
-                        selectedProvider === provider.value
-                          ? 'border-primary bg-primary/5'
-                          : 'hover:bg-muted/50'
+                      key={key}
+                      onClick={() => setSelectedProvider(key as LlmProvider)}
+                      className={`flex w-full items-center justify-between border-2 p-3 text-left transition-all duration-150 ${
+                        selectedProvider === key
+                          ? 'border-foreground bg-foreground text-background'
+                          : 'border-foreground hover:bg-secondary'
                       }`}
                     >
                       <div>
-                        <p className="font-medium">{provider.label}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {provider.description}
+                        <p className="font-bold uppercase text-sm">{provider.display_name}</p>
+                        <p className="text-xs opacity-70">
+                          {provider.models.length} modelos disponíveis
                         </p>
                       </div>
-                      {selectedProvider === provider.value && (
-                        <Check className="h-5 w-5 text-primary" />
+                      {selectedProvider === key && (
+                        <Check className="h-5 w-5" />
                       )}
                     </button>
                   ))}
                 </div>
               </div>
+
+              {/* Model Selection */}
+              {currentModels.length > 0 && (
+                <div>
+                  <label className="mb-2 block text-sm font-bold uppercase">
+                    Modelo
+                  </label>
+                  <Select.Root value={selectedModel} onValueChange={setSelectedModel}>
+                    <Select.Trigger className="flex h-12 w-full items-center justify-between border-2 border-foreground bg-background px-4 text-sm font-bold">
+                      <Select.Value placeholder="Selecione um modelo" />
+                      <ChevronDown className="h-4 w-4" />
+                    </Select.Trigger>
+                    <Select.Portal>
+                      <Select.Content className="border-2 border-foreground bg-card shadow-brutal max-h-[300px] overflow-auto">
+                        <Select.Viewport>
+                          {currentModels.map((model) => (
+                            <Select.Item
+                              key={model.id}
+                              value={model.id}
+                              className="cursor-pointer px-4 py-3 hover:bg-foreground hover:text-background focus:outline-none focus:bg-foreground focus:text-background"
+                            >
+                              <Select.ItemText>
+                                <div>
+                                  <p className="font-bold text-sm">{model.name}</p>
+                                  <p className="text-xs opacity-70">{model.description}</p>
+                                </div>
+                              </Select.ItemText>
+                            </Select.Item>
+                          ))}
+                        </Select.Viewport>
+                      </Select.Content>
+                    </Select.Portal>
+                  </Select.Root>
+
+                  {/* Model Info */}
+                  {selectedModel && (
+                    <div className="mt-2 text-xs text-muted-foreground border-l-2 border-foreground pl-2">
+                      {currentModels.find(m => m.id === selectedModel)?.description}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <Button
                 className="w-full"
@@ -485,12 +547,12 @@ export default function VulnerabilityDetailPage() {
                 isLoading={generateFixMutation.isPending}
               >
                 <Sparkles className="mr-2 h-4 w-4" />
-                Gerar Fix
+                GERAR FIX
               </Button>
 
               {vulnerability.suggestedFix && (
-                <div className="rounded-lg bg-muted p-3">
-                  <p className="mb-1 text-xs font-medium text-muted-foreground">
+                <div className="border-2 border-foreground p-3">
+                  <p className="mb-1 text-xs font-bold uppercase text-muted-foreground">
                     Sugestão Inicial
                   </p>
                   <p className="text-sm">{vulnerability.suggestedFix}</p>
@@ -502,28 +564,28 @@ export default function VulnerabilityDetailPage() {
           {/* Quick Info */}
           <Card>
             <CardHeader>
-              <CardTitle>Informações</CardTitle>
+              <CardTitle>INFORMAÇÕES</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Repositório</span>
-                <span className="font-medium">
+              <div className="flex justify-between border-b border-foreground/20 pb-2">
+                <span className="text-muted-foreground font-bold uppercase text-xs">Repositório</span>
+                <span className="font-bold">
                   {vulnerability.scan?.repository?.name}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Branch</span>
-                <span className="font-medium">{vulnerability.scan?.branch}</span>
+              <div className="flex justify-between border-b border-foreground/20 pb-2">
+                <span className="text-muted-foreground font-bold uppercase text-xs">Branch</span>
+                <span className="font-mono">{vulnerability.scan?.branch}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Criado em</span>
-                <span className="font-medium">
+              <div className="flex justify-between border-b border-foreground/20 pb-2">
+                <span className="text-muted-foreground font-bold uppercase text-xs">Criado em</span>
+                <span className="font-mono text-xs">
                   {formatDate(vulnerability.createdAt)}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Fixes gerados</span>
-                <span className="font-medium">
+                <span className="text-muted-foreground font-bold uppercase text-xs">Fixes gerados</span>
+                <span className="font-bold">
                   {vulnerability.fixes?.length || 0}
                 </span>
               </div>

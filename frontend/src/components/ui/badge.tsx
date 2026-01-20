@@ -3,31 +3,32 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const badgeVariants = cva(
-  'inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+  'inline-flex items-center border-2 border-foreground px-3 py-1 text-xs font-bold uppercase tracking-wider transition-colors focus:outline-none focus:ring-2 focus:ring-foreground focus:ring-offset-2',
   {
     variants: {
       variant: {
         default:
-          'border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80',
+          'bg-foreground text-background',
         secondary:
-          'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80',
+          'bg-secondary text-foreground',
         destructive:
-          'border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80',
-        outline: 'text-foreground',
+          'bg-brutal-red text-white',
+        outline:
+          'bg-background text-foreground',
         critical:
-          'border-transparent bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+          'bg-brutal-red text-white',
         high:
-          'border-transparent bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+          'bg-brutal-yellow text-foreground',
         medium:
-          'border-transparent bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+          'bg-brutal-blue text-white',
         low:
-          'border-transparent bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+          'bg-secondary text-foreground',
         info:
-          'border-transparent bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400',
+          'bg-background text-foreground',
         success:
-          'border-transparent bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+          'bg-brutal-green text-white',
         warning:
-          'border-transparent bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+          'bg-brutal-yellow text-foreground',
       },
     },
     defaultVariants: {
