@@ -73,11 +73,27 @@ export default function VulnerabilityDetailPage() {
     onSuccess: (response) => {
       const data = response.data.data;
       if (data?.pullRequest?.url) {
-        toast.success(`Pull Request #${data.pullRequest.number} criado com sucesso!`);
+        toast.success(
+          <div>
+            <p>Pull Request #{data.pullRequest.number} criado!</p>
+            <a
+              href={data.pullRequest.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline"
+            >
+              Ver no GitHub
+            </a>
+          </div>,
+          { duration: 8000 }
+        );
       } else {
         toast.success('Fix aplicado com sucesso!');
       }
+      // Invalidate all related queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ['vulnerability', vulnId] });
+      queryClient.invalidateQueries({ queryKey: ['fixes', vulnId] });
+      queryClient.invalidateQueries({ queryKey: ['vulnerabilities'] });
     },
     onError: (error: any) => {
       const status = error.response?.status;
@@ -85,10 +101,13 @@ export default function VulnerabilityDetailPage() {
 
       if (status === 401) {
         toast.error('Token do GitHub expirado. Por favor, faça login novamente.');
-        // Redirect to login after a short delay
         setTimeout(() => {
           router.push('/login');
         }, 2000);
+      } else if (status === 403) {
+        toast.error('Permissões insuficientes. Seu token precisa de acesso "repo" para criar PRs.', {
+          duration: 6000,
+        });
       } else {
         toast.error(message || 'Erro ao aplicar fix');
       }
