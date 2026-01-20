@@ -72,6 +72,12 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'gitscan-auth',
       partialize: (state) => ({ token: state.token }),
+      onRehydrateStorage: () => (state) => {
+        // Sync token to gitscan_token key when Zustand rehydrates from localStorage
+        if (state?.token) {
+          localStorage.setItem('gitscan_token', state.token);
+        }
+      },
     }
   )
 );
