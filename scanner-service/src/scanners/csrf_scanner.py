@@ -144,7 +144,7 @@ class CSRFScanner(BaseScanner):
                     title=pattern_info['title'],
                     description=pattern_info['description'],
                     severity=pattern_info['severity'],
-                    category=VulnerabilityCategory.SECURITY_MISCONFIGURATION,
+                    category=VulnerabilityCategory.CSRF,
                     file_path=file_path,
                     start_line=start_line,
                     end_line=end_line,

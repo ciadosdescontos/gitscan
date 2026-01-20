@@ -133,6 +133,11 @@ export type VulnerabilityCategory =
   | 'DEPENDENCY'
   | 'CONFIGURATION'
   | 'CODE_QUALITY'
+  | 'CSRF'
+  | 'SESSION'
+  | 'IDOR'
+  | 'MASS_ASSIGNMENT'
+  | 'OPEN_REDIRECT'
   | 'OTHER';
 export type VulnerabilityStatus = 'OPEN' | 'IN_PROGRESS' | 'FIXED' | 'WONT_FIX' | 'FALSE_POSITIVE';
 
