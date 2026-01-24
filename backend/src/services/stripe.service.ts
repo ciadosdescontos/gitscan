@@ -1,13 +1,28 @@
 import Stripe from 'stripe';
 import { config } from '../config/index.js';
-import { prisma } from '../lib/prisma.js';
+import { prisma } from '../config/database.js';
 import { logger } from '../utils/logger.js';
 import { PlanType, SubscriptionStatus } from '@prisma/client';
 
-// Initialize Stripe
-const stripe = new Stripe(config.stripe.secretKey, {
-  apiVersion: '2024-12-18.acacia',
-});
+// Lazy initialization of Stripe
+let stripeInstance: Stripe | null = null;
+
+function getStripe(): Stripe {
+  if (!config.stripe.secretKey) {
+    throw new Error('Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.');
+  }
+  if (!stripeInstance) {
+    stripeInstance = new Stripe(config.stripe.secretKey, {
+      apiVersion: '2024-12-18.acacia',
+    });
+  }
+  return stripeInstance;
+}
+
+// Check if Stripe is configured
+export function isStripeConfigured(): boolean {
+  return !!config.stripe.secretKey;
+}
 
 // Plan configuration with limits
 export const PLAN_LIMITS = {
@@ -60,7 +75,7 @@ export async function getOrCreateStripeCustomer(userId: string): Promise<string>
   }
 
   // Create new Stripe customer
-  const customer = await stripe.customers.create({
+  const customer = await getStripe().customers.create({
     email: user.email || undefined,
     name: user.username,
     metadata: {
@@ -93,7 +108,7 @@ export async function createCheckoutSession(
     throw new Error(`Price ID not configured for plan: ${plan}`);
   }
 
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     customer: customerId,
     mode: 'subscription',
     payment_method_types: ['card'],
@@ -140,7 +155,7 @@ export async function createPortalSession(
     throw new Error('No Stripe customer found for user');
   }
 
-  const session = await stripe.billingPortal.sessions.create({
+  const session = await getStripe().billingPortal.sessions.create({
     customer: user.stripeCustomerId,
     return_url: returnUrl,
   });
@@ -226,7 +241,7 @@ export async function handleInvoicePaid(invoice: Stripe.Invoice): Promise<void> 
     return;
   }
 
-  const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+  const subscription = await getStripe().subscriptions.retrieve(invoice.subscription as string);
   const userId = subscription.metadata.userId;
 
   if (!userId) {
@@ -432,11 +447,11 @@ export function verifyWebhookSignature(
   payload: string | Buffer,
   signature: string
 ): Stripe.Event {
-  return stripe.webhooks.constructEvent(
+  return getStripe().webhooks.constructEvent(
     payload,
     signature,
     config.stripe.webhookSecret
   );
 }
 
-export { stripe };
+export { getStripe };

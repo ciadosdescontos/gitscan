@@ -240,3 +240,147 @@ export interface DashboardStats {
     info: number;
   };
 }
+
+// ============================================================================
+// Pentest Types
+// ============================================================================
+
+export type PentestStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+export type AgentStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'SKIPPED';
+
+export type AgentName =
+  | 'pre-recon'
+  | 'recon'
+  | 'injection-vuln'
+  | 'xss-vuln'
+  | 'auth-vuln'
+  | 'ssrf-vuln'
+  | 'authz-vuln'
+  | 'injection-exploit'
+  | 'xss-exploit'
+  | 'auth-exploit'
+  | 'ssrf-exploit'
+  | 'authz-exploit'
+  | 'report';
+
+export type PhaseName =
+  | 'pre-recon'
+  | 'recon'
+  | 'vulnerability-analysis'
+  | 'exploitation'
+  | 'reporting';
+
+export interface AgentRun {
+  id: string;
+  pentestRunId: string;
+  agentName: AgentName;
+  phase: PhaseName;
+  status: AgentStatus;
+  attemptNumber: number;
+  durationMs?: number;
+  costUsd?: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  numTurns?: number;
+  model?: string;
+  checkpoint?: string;
+  commitHash?: string;
+  error?: string;
+  startedAt: string;
+  completedAt?: string;
+}
+
+export interface PentestReport {
+  id: string;
+  pentestRunId: string;
+  content: string;
+  format: 'JSON' | 'HTML' | 'PDF' | 'MARKDOWN';
+  summary?: Record<string, unknown>;
+  criticalCount: number;
+  highCount: number;
+  mediumCount: number;
+  lowCount: number;
+  infoCount: number;
+  exploitsAttempted: number;
+  exploitsSuccessful: number;
+  createdAt: string;
+}
+
+export interface PentestRun {
+  id: string;
+  userId: string;
+  repositoryId: string;
+  webUrl: string;
+  branch: string;
+  workflowId: string;
+  runId?: string;
+  status: PentestStatus;
+  currentPhase?: string;
+  currentAgent?: string;
+  completedAgents: string[];
+  skippedAgents: string[];
+  failedAgent?: string;
+  error?: string;
+  totalCostUsd?: number;
+  totalDurationMs?: number;
+  configPath?: string;
+  auditLogPath?: string;
+  startedAt: string;
+  completedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  repository?: {
+    id: string;
+    name: string;
+    fullName: string;
+  };
+  agentRuns?: AgentRun[];
+  pentestReport?: PentestReport;
+}
+
+export interface PentestProgress {
+  workflowId: string;
+  status: PentestStatus;
+  currentPhase: PhaseName | null;
+  currentAgent: AgentName | null;
+  completedAgents: AgentName[];
+  skippedAgents: AgentName[];
+  failedAgent: AgentName | null;
+  error?: string;
+  elapsedMs: number;
+  agentMetrics?: Record<AgentName, AgentMetrics>;
+}
+
+export interface AgentMetrics {
+  durationMs: number;
+  inputTokens: number | null;
+  outputTokens: number | null;
+  costUsd: number | null;
+  numTurns: number | null;
+  model?: string;
+}
+
+// Agent definitions for UI
+export const AGENT_DEFINITIONS: Record<AgentName, { name: string; description: string; phase: PhaseName }> = {
+  'pre-recon': { name: 'Pre-Recon', description: 'Análise estática de código', phase: 'pre-recon' },
+  'recon': { name: 'Reconhecimento', description: 'Mapeamento de superfície de ataque', phase: 'recon' },
+  'injection-vuln': { name: 'Injection Vuln', description: 'Detecção de SQLi, Command Injection', phase: 'vulnerability-analysis' },
+  'xss-vuln': { name: 'XSS Vuln', description: 'Detecção de Cross-Site Scripting', phase: 'vulnerability-analysis' },
+  'auth-vuln': { name: 'Auth Vuln', description: 'Detecção de falhas de autenticação', phase: 'vulnerability-analysis' },
+  'ssrf-vuln': { name: 'SSRF Vuln', description: 'Detecção de Server-Side Request Forgery', phase: 'vulnerability-analysis' },
+  'authz-vuln': { name: 'Authz Vuln', description: 'Detecção de falhas de autorização', phase: 'vulnerability-analysis' },
+  'injection-exploit': { name: 'Injection Exploit', description: 'Exploração de injeção', phase: 'exploitation' },
+  'xss-exploit': { name: 'XSS Exploit', description: 'Exploração de XSS', phase: 'exploitation' },
+  'auth-exploit': { name: 'Auth Exploit', description: 'Exploração de autenticação', phase: 'exploitation' },
+  'ssrf-exploit': { name: 'SSRF Exploit', description: 'Exploração de SSRF', phase: 'exploitation' },
+  'authz-exploit': { name: 'Authz Exploit', description: 'Exploração de autorização', phase: 'exploitation' },
+  'report': { name: 'Relatório', description: 'Geração de relatório executivo', phase: 'reporting' },
+};
+
+export const PHASE_DEFINITIONS: Record<PhaseName, { name: string; description: string }> = {
+  'pre-recon': { name: 'Pré-Reconhecimento', description: 'Análise estática inicial' },
+  'recon': { name: 'Reconhecimento', description: 'Mapeamento da aplicação' },
+  'vulnerability-analysis': { name: 'Análise de Vulnerabilidades', description: 'Detecção de vulnerabilidades' },
+  'exploitation': { name: 'Exploração', description: 'Validação de vulnerabilidades' },
+  'reporting': { name: 'Relatório', description: 'Geração de relatório' },
+};

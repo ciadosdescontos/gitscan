@@ -1,10 +1,18 @@
 # Development Dockerfile for GitScan Backend
-FROM node:20-alpine
+# Using node:20-slim for Temporal SDK compatibility (requires glibc, not musl)
+FROM node:20-slim
 
 WORKDIR /app
 
 # Install dependencies for native modules and OpenSSL for Prisma
-RUN apk add --no-cache python3 make g++ openssl openssl-dev
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    openssl \
+    libssl-dev \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package*.json ./

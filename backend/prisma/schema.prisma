@@ -45,6 +45,7 @@ model User {
   scans           Scan[]
   apiKeys         UserApiKey[]
   invoices        Invoice[]
+  pentestRuns     PentestRun[]
 
   @@map("users")
 }
@@ -91,6 +92,7 @@ model Repository {
   // Relations
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   scans           Scan[]
+  pentestRuns     PentestRun[]
 
   @@unique([userId, githubRepoId])
   @@map("repositories")
@@ -376,3 +378,147 @@ enum InvoiceStatus {
 // FREE: 3 repos, 10 scans/month, 5 AI fixes/month
 // PRO: 20 repos, 100 scans/month, 50 AI fixes/month
 // ENTERPRISE: Unlimited repos, Unlimited scans, Unlimited AI fixes
+
+// ============================================================================
+// Pentest Pipeline Models (Shannon Integration)
+// ============================================================================
+
+// PentestRun - Represents a complete pentest pipeline execution
+model PentestRun {
+  id              String        @id @default(uuid())
+  userId          String
+  repositoryId    String
+
+  // Target information
+  webUrl          String        // Target web application URL
+  branch          String        @default("main")
+
+  // Temporal workflow
+  workflowId      String        @unique
+  runId           String?
+
+  // Status tracking
+  status          PentestStatus @default(PENDING)
+  currentPhase    String?       // Current phase name
+  currentAgent    String?       // Current agent name
+  completedAgents String[]      // List of completed agent names
+  skippedAgents   String[]      // List of skipped agent names
+  failedAgent     String?       // Agent that failed (if any)
+  error           String?       @db.Text
+
+  // Metrics
+  totalCostUsd    Float?
+  totalDurationMs Int?
+
+  // Configuration
+  configPath      String?       // Path to YAML config file
+  auditLogPath    String?       // Path to audit logs
+
+  // Timing
+  startedAt       DateTime      @default(now())
+  completedAt     DateTime?
+
+  // Timestamps
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  repository      Repository    @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  agentRuns       AgentRun[]
+  pentestReport   PentestReport?
+
+  @@map("pentest_runs")
+}
+
+// AgentRun - Represents a single agent execution within a pentest
+model AgentRun {
+  id              String        @id @default(uuid())
+  pentestRunId    String
+
+  // Agent info
+  agentName       String        // e.g., "pre-recon", "injection-vuln"
+  phase           String        // e.g., "pre-recon", "vulnerability-analysis"
+
+  // Status
+  status          AgentStatus   @default(PENDING)
+  attemptNumber   Int           @default(1)
+
+  // Metrics
+  durationMs      Int?
+  costUsd         Float?
+  inputTokens     Int?
+  outputTokens    Int?
+  numTurns        Int?
+  model           String?       // LLM model used
+
+  // Git checkpoint
+  checkpoint      String?       // Git commit hash before execution
+  commitHash      String?       // Git commit hash after success
+
+  // Error handling
+  error           String?       @db.Text
+
+  // Timing
+  startedAt       DateTime      @default(now())
+  completedAt     DateTime?
+
+  // Timestamps
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  pentestRun      PentestRun    @relation(fields: [pentestRunId], references: [id], onDelete: Cascade)
+
+  @@map("agent_runs")
+}
+
+// PentestReport - Final security assessment report
+model PentestReport {
+  id              String        @id @default(uuid())
+  pentestRunId    String        @unique
+
+  // Report content
+  content         String        @db.Text  // Full markdown report
+  format          ReportFormat  @default(MARKDOWN)
+
+  // Summary metrics
+  summary         Json?         // Aggregated findings summary
+
+  // Vulnerability counts
+  criticalCount   Int           @default(0)
+  highCount       Int           @default(0)
+  mediumCount     Int           @default(0)
+  lowCount        Int           @default(0)
+  infoCount       Int           @default(0)
+
+  // Exploit results
+  exploitsAttempted Int         @default(0)
+  exploitsSuccessful Int        @default(0)
+
+  // Timestamps
+  createdAt       DateTime      @default(now())
+
+  // Relations
+  pentestRun      PentestRun    @relation(fields: [pentestRunId], references: [id], onDelete: Cascade)
+
+  @@map("pentest_reports")
+}
+
+// Pentest Status enum
+enum PentestStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+// Agent Status enum
+enum AgentStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  SKIPPED
+}

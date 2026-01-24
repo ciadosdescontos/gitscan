@@ -10,6 +10,8 @@ import {
   Settings,
   Bug,
   Zap,
+  Shield,
+  Target,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -17,6 +19,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Repositórios', href: '/repositories', icon: FolderGit2 },
   { name: 'Scans', href: '/scans', icon: Scan },
+  { name: 'Pentest', href: '/pentest', icon: Shield },
   { name: 'Vulnerabilidades', href: '/vulnerabilities', icon: Bug },
 ];
 

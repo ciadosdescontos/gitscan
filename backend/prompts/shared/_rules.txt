@@ -1,0 +1,14 @@
+## Testing Rules and Constraints
+
+### Paths to Avoid
+{{RULES_AVOID}}
+
+### Paths to Focus On
+{{RULES_FOCUS}}
+
+### General Testing Guidelines
+1. Do NOT perform destructive actions (DELETE, DROP, etc.) without explicit confirmation
+2. Do NOT access production databases with sensitive user data
+3. Do NOT exfiltrate any real user data - use dummy/test data only
+4. Always document your testing steps for reproducibility
+5. If you find a vulnerability, document it but do NOT exploit it beyond proof-of-concept

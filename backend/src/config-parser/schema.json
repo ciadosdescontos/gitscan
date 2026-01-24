@@ -1,0 +1,287 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://gitscan.io/schemas/pentest-config.json",
+  "title": "Pentest Configuration",
+  "description": "Configuration schema for GitScan pentest workflows",
+  "type": "object",
+  "required": ["target"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Configuration version",
+      "pattern": "^\\d+\\.\\d+(\\.\\d+)?$"
+    },
+    "target": {
+      "type": "object",
+      "required": ["url"],
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Base URL of the target application"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name for identification in reports"
+        },
+        "tech_stack": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Technology stack hints"
+        },
+        "additional_urls": {
+          "type": "array",
+          "items": { "type": "string", "format": "uri" },
+          "description": "Additional URLs in scope"
+        },
+        "api_endpoints": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Known API endpoints"
+        }
+      }
+    },
+    "authentication": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["login_type", "login_url", "credentials"],
+          "properties": {
+            "login_type": { "const": "form" },
+            "login_url": { "type": "string", "format": "uri" },
+            "credentials": {
+              "type": "object",
+              "required": ["username", "password"],
+              "properties": {
+                "username": { "type": "string" },
+                "password": { "type": "string" }
+              }
+            },
+            "login_flow": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "selectors": {
+              "type": "object",
+              "properties": {
+                "username": { "type": "string" },
+                "password": { "type": "string" },
+                "submit": { "type": "string" }
+              }
+            },
+            "success_indicator": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["login_type", "credentials"],
+          "properties": {
+            "login_type": { "const": "basic" },
+            "credentials": {
+              "type": "object",
+              "required": ["username", "password"],
+              "properties": {
+                "username": { "type": "string" },
+                "password": { "type": "string" }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["login_type", "token"],
+          "properties": {
+            "login_type": { "const": "bearer" },
+            "token": { "type": "string" },
+            "header_name": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["login_type", "client_id", "client_secret", "token_url"],
+          "properties": {
+            "login_type": { "const": "oauth2" },
+            "client_id": { "type": "string" },
+            "client_secret": { "type": "string" },
+            "token_url": { "type": "string", "format": "uri" },
+            "scope": { "type": "string" },
+            "grant_type": {
+              "enum": ["client_credentials", "password", "authorization_code"]
+            },
+            "credentials": {
+              "type": "object",
+              "properties": {
+                "username": { "type": "string" },
+                "password": { "type": "string" }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["login_type", "key"],
+          "properties": {
+            "login_type": { "const": "api_key" },
+            "key": { "type": "string" },
+            "header_name": { "type": "string" },
+            "query_param": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["login_type", "instructions"],
+          "properties": {
+            "login_type": { "const": "custom" },
+            "instructions": {
+              "type": "array",
+              "items": { "type": "string" },
+              "minItems": 1
+            },
+            "headers": {
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            },
+            "cookies": {
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            }
+          }
+        }
+      ]
+    },
+    "rules": {
+      "type": "object",
+      "properties": {
+        "avoid": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/rule" }
+        },
+        "focus": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/rule" }
+        },
+        "max_depth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "rate_limit": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 1000
+        }
+      }
+    },
+    "agents": {
+      "type": "object",
+      "properties": {
+        "skip": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/agentName" }
+        },
+        "only": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/agentName" }
+        },
+        "overrides": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "max_attempts": { "type": "integer", "minimum": 1, "maximum": 10 },
+              "timeout_ms": { "type": "integer", "minimum": 1000 },
+              "model": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "output_dir": { "type": "string" },
+        "report_formats": {
+          "type": "array",
+          "items": { "enum": ["markdown", "html", "pdf", "json"] }
+        },
+        "include_logs": { "type": "boolean" },
+        "verbosity": {
+          "enum": ["quiet", "normal", "verbose", "debug"]
+        }
+      }
+    },
+    "variables": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  },
+  "definitions": {
+    "rule": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type", "url_path"],
+          "properties": {
+            "type": { "const": "path" },
+            "url_path": { "type": "string" },
+            "description": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "parameter"],
+          "properties": {
+            "type": { "const": "parameter" },
+            "parameter": { "type": "string" },
+            "value": { "type": "string" },
+            "description": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "domain"],
+          "properties": {
+            "type": { "const": "domain" },
+            "domain": { "type": "string" },
+            "description": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "method"],
+          "properties": {
+            "type": { "const": "method" },
+            "method": { "enum": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"] },
+            "description": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "content_type"],
+          "properties": {
+            "type": { "const": "content-type" },
+            "content_type": { "type": "string" },
+            "description": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "agentName": {
+      "enum": [
+        "pre-recon",
+        "recon",
+        "injection-vuln",
+        "xss-vuln",
+        "auth-vuln",
+        "ssrf-vuln",
+        "authz-vuln",
+        "injection-exploit",
+        "xss-exploit",
+        "auth-exploit",
+        "ssrf-exploit",
+        "authz-exploit",
+        "report"
+      ]
+    }
+  }
+}

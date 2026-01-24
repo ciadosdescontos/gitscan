@@ -61,6 +61,8 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       STRIPE_PRICE_PRO: ${STRIPE_PRICE_PRO:-}
       STRIPE_PRICE_ENTERPRISE: ${STRIPE_PRICE_ENTERPRISE:-}
+      TEMPORAL_ADDRESS: temporal:7233
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -107,9 +109,86 @@ services:
     depends_on:
       - backend
 
+  # Temporal Server (Workflow Orchestration)
+  temporal:
+    image: temporalio/auto-setup:1.24
+    container_name: gitscan-temporal
+    restart: unless-stopped
+    ports:
+      - "7233:7233"
+    environment:
+      - DB=postgres12
+      - DB_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER:-gitscan}
+      - POSTGRES_PWD=${POSTGRES_PASSWORD:?Database password is required}
+      - POSTGRES_SEEDS=postgres
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+    volumes:
+      - ./temporal-config:/etc/temporal/config/dynamicconfig
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "tctl", "--address", "temporal:7233", "cluster", "health"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+  # Temporal Web UI
+  temporal-ui:
+    image: temporalio/ui:2.26.2
+    container_name: gitscan-temporal-ui
+    restart: unless-stopped
+    ports:
+      - "8088:8080"
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:8080
+    depends_on:
+      temporal:
+        condition: service_healthy
+
+  # Temporal Worker (Pentest Agents)
+  temporal-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    container_name: gitscan-temporal-worker
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      TEMPORAL_ADDRESS: temporal:7233
+      DATABASE_URL: postgresql://${POSTGRES_USER:-gitscan}:${POSTGRES_PASSWORD:?Database password is required}@postgres:5432/${POSTGRES_DB:-gitscan_db}?schema=public
+      REDIS_URL: redis://redis:6379
+      SCANNER_SERVICE_URL: http://scanner:5000
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      DOCKER_ENV: "true"
+      PENTEST_BASE_DIR: /tmp/pentest
+      PLAYWRIGHT_USER_DATA_DIR: /tmp/playwright-data
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - pentest_repos:/tmp/pentest
+      - playwright_data:/tmp/playwright-data
+    depends_on:
+      temporal:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  # ============================================================================
+  # Playwright MCP Servers (Browser Automation for Pentest)
+  # NOTE: Disabled temporarily - @anthropic-ai/mcp-server-playwright package
+  # doesn't exist. Need to implement custom MCP server or use alternative.
+  # TODO: Implement using @anthropic-ai/mcp-server-puppeteer or custom solution
+  # ============================================================================
+
 volumes:
   postgres_data:
   redis_data:
+  pentest_repos:
+  playwright_data:
 
 networks:
   default:

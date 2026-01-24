@@ -1,0 +1,35 @@
+# Dockerfile for Temporal Worker (Pentest Agents)
+# Using node:20-slim for Temporal SDK compatibility (requires glibc, not musl)
+FROM node:20-slim
+
+WORKDIR /app
+
+# Install dependencies for native modules, OpenSSL, and git (for checkpoints)
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    openssl \
+    libssl-dev \
+    git \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Install dependencies
+RUN npm install
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Copy source code (will be overwritten by volume in dev)
+COPY . .
+
+# Create directory for pentest repositories
+RUN mkdir -p /tmp/pentest
+
+# Start Temporal worker
+CMD ["npm", "run", "worker"]

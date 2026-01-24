@@ -1,0 +1,27 @@
+# Temporal Dynamic Configuration for Development
+# See: https://docs.temporal.io/references/dynamic-configuration
+
+# History settings
+history.enableActivityEagerExecution:
+  - value: true
+    constraints: {}
+
+# Workflow execution limits
+limit.maxIDLength:
+  - value: 1000
+    constraints: {}
+
+# Frontend settings
+frontend.enableClientVersionCheck:
+  - value: false
+    constraints: {}
+
+# System settings
+system.enableActivityEagerExecution:
+  - value: true
+    constraints: {}
+
+# Matching settings for development (faster polling)
+matching.longPollExpirationInterval:
+  - value: "60s"
+    constraints: {}

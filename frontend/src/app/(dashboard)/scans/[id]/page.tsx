@@ -86,8 +86,10 @@ export default function ScanDetailPage() {
       const response = await scanApi.getScan(scanId);
       return response.data.data as ScanType;
     },
-    refetchInterval: (data) =>
-      data?.status === 'RUNNING' || data?.status === 'PENDING' ? 2000 : false,
+    refetchInterval: (query) => {
+      const data = query.state.data as ScanType | undefined;
+      return data?.status === 'RUNNING' || data?.status === 'PENDING' ? 2000 : false;
+    },
   });
 
   // Fetch scan progress with logs
@@ -97,7 +99,7 @@ export default function ScanDetailPage() {
       const response = await scanApi.getScanProgress(scanId);
       return response.data.data;
     },
-    refetchInterval: (data) => {
+    refetchInterval: () => {
       const status = scan?.status;
       return status === 'RUNNING' || status === 'PENDING' ? 1000 : false;
     },

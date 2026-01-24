@@ -186,11 +186,11 @@ export default function PricingPage() {
           <div className="flex items-center gap-4">
             {isAuthenticated ? (
               <Link href="/dashboard">
-                <Button variant="brutal">Dashboard</Button>
+                <Button>Dashboard</Button>
               </Link>
             ) : (
               <Link href="/auth/login">
-                <Button variant="brutal">Entrar</Button>
+                <Button>Entrar</Button>
               </Link>
             )}
           </div>
@@ -262,7 +262,7 @@ export default function PricingPage() {
 
                 {/* CTA Button */}
                 <Button
-                  variant={plan.popular ? 'brutal' : 'outline'}
+                  variant={plan.popular ? 'default' : 'outline'}
                   size="lg"
                   className="w-full"
                   onClick={() => handleSelectPlan(plan.id)}
@@ -335,7 +335,7 @@ export default function PricingPage() {
             Comece gratuitamente e faca upgrade quando precisar de mais recursos.
           </p>
           <Link href={isAuthenticated ? '/dashboard' : '/auth/login'}>
-            <Button variant="brutal" size="lg">
+            <Button size="lg">
               {isAuthenticated ? 'Ir para o Dashboard' : 'Comecar Agora'}
             </Button>
           </Link>

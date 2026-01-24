@@ -1,0 +1,16 @@
+## Target Information
+
+### Web Application
+- URL: {{WEB_URL}}
+- This is the main entry point for testing
+
+### Source Code
+- Repository Path: {{REPO_PATH}}
+- Analyze source code to understand application logic
+- Look for security-relevant patterns and configurations
+
+### Deliverables Directory
+- Path: {{REPO_PATH}}/deliverables/
+- All output files should be saved here
+- Use markdown (.md) for reports
+- Use JSON (.json) for structured data (queues)

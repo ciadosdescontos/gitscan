@@ -111,3 +111,21 @@ export const subscriptionApi = {
   createPortal: () => api.post('/subscription/portal'),
   checkLimits: (action: string) => api.get(`/subscription/limits/${action}`),
 };
+
+// Pentest API
+export const pentestApi = {
+  startPentest: (data: { repositoryId: string; webUrl: string; branch?: string; configYaml?: string }) =>
+    api.post('/pentest', data),
+  listPentests: (params?: { page?: number; limit?: number; status?: string; repositoryId?: string }) =>
+    api.get('/pentest', { params }),
+  getPentest: (id: string) => api.get(`/pentest/${id}`),
+  getPentestProgress: (id: string) => api.get(`/pentest/${id}/progress`),
+  cancelPentest: (id: string) => api.post(`/pentest/${id}/cancel`),
+  getPentestReport: (id: string) => api.get(`/pentest/${id}/report`),
+  listDeliverables: (id: string) => api.get(`/pentest/${id}/deliverables`),
+  getDeliverable: (id: string, filename: string) => api.get(`/pentest/${id}/deliverables/${filename}`),
+  getHealth: () => api.get('/pentest/health'),
+
+  // SSE stream for real-time progress
+  getProgressStreamUrl: (id: string) => `${API_URL}/pentest/${id}/stream`,
+};
