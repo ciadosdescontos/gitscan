@@ -4,7 +4,7 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Install dependencies for native modules and OpenSSL for Prisma
+# Install dependencies for native modules, OpenSSL for Prisma, and Chrome/Puppeteer
 RUN apt-get update && apt-get install -y \
     python3 \
     make \
@@ -12,6 +12,32 @@ RUN apt-get update && apt-get install -y \
     openssl \
     libssl-dev \
     ca-certificates \
+    # Chrome/Puppeteer dependencies
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libatspi2.0-0 \
+    libcairo2 \
+    libcups2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libgbm1 \
+    libglib2.0-0 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libpango-1.0-0 \
+    libx11-6 \
+    libxcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxkbcommon0 \
+    libxrandr2 \
+    xdg-utils \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy package files

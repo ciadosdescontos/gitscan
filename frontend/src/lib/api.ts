@@ -128,4 +128,7 @@ export const pentestApi = {
 
   // SSE stream for real-time progress
   getProgressStreamUrl: (id: string) => `${API_URL}/pentest/${id}/stream`,
+
+  // PDF report download URL
+  getReportPdfUrl: (id: string) => `${API_URL}/pentest/${id}/report/pdf`,
 };
